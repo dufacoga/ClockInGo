@@ -17,6 +17,7 @@ import com.example.clockingo.ui.theme.ThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.example.clockingo.presentation.home.users.CreateUsersScreen
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +57,7 @@ fun HomeScreen(
         ),
         DrawerMenuItem(
             3,
-            "Entry's",
+            "Entries",
             subItems = listOf(
                 DrawerSubItems(30, "Add new", true),
                 DrawerSubItems(31, "Find existing", true),
@@ -66,7 +67,7 @@ fun HomeScreen(
         ),
         DrawerMenuItem(
             4,
-            "Exit's",
+            "Exits",
             subItems = listOf(
                 DrawerSubItems(40, "Add new", true),
                 DrawerSubItems(41, "Find existing", true),
@@ -221,7 +222,7 @@ fun HomeScreen(
                         Text("Welcome to ClockInGo", color = MaterialTheme.colorScheme.onSurface)
                     }
                     10 -> Text("Users - Find existing screen coming soon")
-                    11 -> Text("Users - Create new screen coming soon")
+                    11 -> CreateUsersScreen(viewModel = viewModel)
                     12 -> Text("Users - Update existing screen coming soon")
                     13 -> Text("Users - Delete existing screen coming soon")
                     20 -> Text("Locations - Find existing screen coming soon")
