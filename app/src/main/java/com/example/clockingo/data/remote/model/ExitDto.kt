@@ -4,15 +4,15 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExitDto(
-    val id: Int,
-    val userId: Int,
-    val locationId: Int,
-    val exitTime: String, // ISO 8601
-    val entryId: Int,
-    val result: String? = null,
-    val irregularBehavior: Boolean = false,
-    val reviewedByAdmin: Boolean = false,
-    val updatedAt: String? = null,
-    val isSynced: Boolean = false,
-    val deviceId: String? = null
+    val Id: Int,
+    val UserId: Int,
+    val LocationId: Int,
+    val ExitTime: String,
+    val EntryId: Int,
+    val Result: String? = null,
+    val IrregularBehavior: Boolean = false,
+    val ReviewedByAdmin: Boolean = false,
+    val UpdatedAt: String? = null,
+    val IsSynced: Boolean = false,
+    val DeviceId: String? = null
 )

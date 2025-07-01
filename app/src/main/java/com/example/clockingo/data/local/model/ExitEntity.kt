@@ -34,12 +34,12 @@ data class ExitEntity(
     val id: Int = 0,
     val userId: Int,
     val locationId: Int,
-    val exitTime: String, // ISO datetime
+    val exitTime: String,
     val entryId: Int,
     val result: String?,
     val irregularBehavior: Boolean = false,
     val reviewedByAdmin: Boolean = false,
-    val updatedAt: String?, // ISO datetime
+    val updatedAt: String?,
     val isSynced: Boolean = false,
     val deviceId: String?
 )

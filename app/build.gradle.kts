@@ -53,6 +53,8 @@ dependencies {
     add("kapt", libs.room.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter)
+    implementation(libs.converter.gson)
+    implementation(libs.gson)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.navigation.compose)

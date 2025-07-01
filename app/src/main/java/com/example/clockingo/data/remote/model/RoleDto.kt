@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RoleDto(
-    val id: Int,
-    val name: String
+    val Id: Int,
+    val Name: String
 )

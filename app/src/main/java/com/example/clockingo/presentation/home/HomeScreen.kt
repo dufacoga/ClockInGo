@@ -1,5 +1,6 @@
 package com.example.clockingo.presentation.home
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,15 +17,16 @@ import com.example.clockingo.ui.theme.ThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.example.clockingo.presentation.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onLogout: () -> Unit,
     onThemeChange: (ClockInGoThemeOption) -> Unit,
     onModeChange: (ThemeMode) -> Unit,
     selectedTheme: ClockInGoThemeOption,
-    selectedMode: ThemeMode
+    selectedMode: ThemeMode,
+    viewModel: UserViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -99,6 +101,7 @@ fun HomeScreen(
                             onClick = {
                                 if (item.subItems.isEmpty()) {
                                     selectedMenu = item.id
+                                    scope.launch { drawerState.close() }
                                 } else {
                                     expandedItems[item.id] = !(expandedItems[item.id] ?: false)
                                 }
@@ -183,7 +186,7 @@ fun HomeScreen(
                                     },
                                     onClick = {
                                         showDropdownMenu = false
-                                        onLogout()
+                                        viewModel.logout()
                                     }
                                 )
                             }
