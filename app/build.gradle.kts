@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.clockingo"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.data.table.material3.android)
     add("kapt", libs.room.compiler)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter)
@@ -60,6 +61,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.datastore)
     implementation(libs.coroutines)
+    implementation(libs.materialdatatablelibrary)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

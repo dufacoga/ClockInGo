@@ -1,7 +1,10 @@
 package com.example.clockingo.presentation.home
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,7 +20,10 @@ import com.example.clockingo.ui.theme.ThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.clockingo.presentation.home.users.CreateUsersScreen
+import com.example.clockingo.presentation.home.users.FindUsersScreen
+import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,7 +33,8 @@ fun HomeScreen(
     onModeChange: (ThemeMode) -> Unit,
     selectedTheme: ClockInGoThemeOption,
     selectedMode: ThemeMode,
-    viewModel: UserViewModel
+    userViewModel: UserViewModel,
+    roleViewModel: RoleViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -77,7 +84,7 @@ fun HomeScreen(
             true
         )
     )
-    var selectedMenu by remember { mutableIntStateOf(0) }
+    var selectedMenu by rememberSaveable { mutableIntStateOf(0) }
     var showDropdownMenu by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     val expandedItems = remember { mutableStateMapOf<Int, Boolean>() }
@@ -187,7 +194,7 @@ fun HomeScreen(
                                     },
                                     onClick = {
                                         showDropdownMenu = false
-                                        viewModel.logout()
+                                        userViewModel.logout()
                                     }
                                 )
                             }
@@ -196,12 +203,14 @@ fun HomeScreen(
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { selectedMenu = 30 },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                if (selectedMenu == 0){
+                    FloatingActionButton(
+                        onClick = { selectedMenu = 30 },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                    }
                 }
             }
         ) { padding ->
@@ -212,6 +221,10 @@ fun HomeScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.TopStart
             ) {
+                BackHandler(enabled = selectedMenu != 0) {
+                    selectedMenu = 0
+                }
+
                 when (selectedMenu) {
                     0 -> Box(
                         modifier = Modifier
@@ -221,8 +234,8 @@ fun HomeScreen(
                     ) {
                         Text("Welcome to ClockInGo", color = MaterialTheme.colorScheme.onSurface)
                     }
-                    10 -> Text("Users - Find existing screen coming soon")
-                    11 -> CreateUsersScreen(viewModel = viewModel)
+                    10 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
+                    11 -> CreateUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
                     12 -> Text("Users - Update existing screen coming soon")
                     13 -> Text("Users - Delete existing screen coming soon")
                     20 -> Text("Locations - Find existing screen coming soon")

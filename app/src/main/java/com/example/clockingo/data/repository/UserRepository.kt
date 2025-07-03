@@ -10,7 +10,7 @@ import com.example.clockingo.domain.repository.IUserRepository
 import retrofit2.Response
 
 class UserRepository : IUserRepository {
-    private val api = RetrofitInstance.api
+    private val api = RetrofitInstance.userApi
 
     override suspend fun getAllUsers(): Response<List<User>> {
         return try {

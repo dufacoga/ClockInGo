@@ -16,24 +16,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.clockingo.data.local.SessionManager
+import com.example.clockingo.data.repository.RoleRepository
 import com.example.clockingo.data.repository.UserRepository
 import com.example.clockingo.domain.usecase.*
+import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val repository = UserRepository()
+        val userRepository = UserRepository()
         val sessionManager = SessionManager(applicationContext)
         val userViewModel = UserViewModel(
-            GetAllUsersUseCase(repository),
-            GetUserByIdUseCase(repository),
-            GetUserByUserUseCase(repository),
-            CreateUserUseCase(repository),
-            UpdateUserUseCase(repository),
-            DeleteUserUseCase(repository),
+            GetAllUsersUseCase(userRepository),
+            GetUserByIdUseCase(userRepository),
+            GetUserByUserUseCase(userRepository),
+            CreateUserUseCase(userRepository),
+            UpdateUserUseCase(userRepository),
+            DeleteUserUseCase(userRepository),
             sessionManager
+        )
+        val roleRepository = RoleRepository()
+        val roleViewModel = RoleViewModel(
+            GetAllRolesUseCase(roleRepository),
+            GetRoleByIdUseCase(roleRepository),
+            CreateRoleUseCase(roleRepository),
+            UpdateRoleUseCase(roleRepository),
+            DeleteRoleUseCase(roleRepository)
         )
 
         setContent {
@@ -54,7 +64,8 @@ class MainActivity : ComponentActivity() {
                         onModeChange = { newMode -> selectedThemeMode = newMode },
                         selectedTheme = selectedTheme,
                         selectedMode = selectedThemeMode,
-                        viewModel = userViewModel
+                        userViewModel = userViewModel,
+                        roleViewModel = roleViewModel
                     )
 
                     false -> LoginScreen(
