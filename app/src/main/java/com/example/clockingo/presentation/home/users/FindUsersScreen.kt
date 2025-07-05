@@ -22,8 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
+import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.materialdatatable.MaterialDataTableC
+import com.example.materialdatatable.dataLoaderFromListWithDelay
 import com.seanproctor.datatable.DataColumn
 import com.seanproctor.datatable.material3.DataTable
 import com.seanproctor.datatable.rememberDataTableState
@@ -32,7 +34,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun FindUsersScreen(
     userViewModel: UserViewModel,
-    roleViewModel: RoleViewModel
+    roleViewModel: RoleViewModel,
+    forUpdate: Boolean
 ) {
     val allUsers by userViewModel.userList.collectAsState()
     val roles by roleViewModel.roleList.collectAsState()
@@ -47,7 +50,8 @@ fun FindUsersScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var userDataLoader: suspend (Int, Int) -> List<List<String>> = { _, _ -> emptyList() }
 
     val width: Dp = screenWidth * 0.95f
     val height: Dp = if (isLandscape) {
@@ -92,40 +96,58 @@ fun FindUsersScreen(
                     .fillMaxSize()
                     .padding(vertical = 8.dp)
             ) {
-                val headers = listOf("ID", "Name", "Phone", "Username", "Role")
+                key(searchId, searchName, configuration.orientation,  userDataLoader){
+                    isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-                key(searchId, searchName, configuration.orientation){
+                    val headers = if (isLandscape) {
+                        listOf("ID", "Name", "Phone", "Username", "Role")
+                    } else {
+                        listOf("ID", "Name", "Username")
+                    }
+                    val filteredUsers = allUsers.filter {
+                        (searchId.isBlank() || it.id.toString().contains(searchId.trim())) &&
+                                (searchName.isBlank() || it.name.contains(searchName.trim(), ignoreCase = true))
+                    }
+                    val paginatedUsersCount = filteredUsers.size
+                    val userRowMapper: (User) -> List<String> = if (isLandscape) {
+                        { user ->
+                            listOf(
+                                user.id.toString(),
+                                user.name,
+                                user.phone ?: "--- --- ----",
+                                user.username,
+                                roles.find { it.id == user.roleId }?.name ?: "Unknown"
+                            )
+                        }
+                    } else {
+                        { user ->
+                            listOf(
+                                user.id.toString(),
+                                user.name,
+                                user.username
+                            )
+                        }
+                    }
+                    userDataLoader = dataLoaderFromListWithDelay(
+                        sourceProvider = { filteredUsers },
+                        rowMapper = userRowMapper
+                    )
+
                     MaterialDataTableC(
                         headers = headers,
-                        dataLoader = { page, pageSize ->
-                            while (allUsers.isEmpty()) {
-                                delay(100)
-                            }
-
-                            val filteredUsers = allUsers.filter {
-                                (searchId.isBlank() || it.id.toString().contains(searchId.trim())) &&
-                                        (searchName.isBlank() || it.name.contains(searchName.trim(), ignoreCase = true))
-                            }
-
-                            val paginatedUsers = filteredUsers.drop((page - 1) * pageSize).take(pageSize)
-
-                            paginatedUsers.map { user ->
-                                listOf(
-                                    user.id.toString(),
-                                    user.name,
-                                    user.phone ?: "--- --- ----",
-                                    user.username,
-                                    roles.find { it.id == user.roleId }?.name ?: "Unknown"
-                                )
-                            }
-                        },
+                        dataLoader = userDataLoader,
                         onEdit = { rowIndex -> println("Edit user at row: $rowIndex") },
                         onDelete = { rowIndex -> println("Delete user at row: $rowIndex") },
-                        editOption = true,
-                        deleteOption = true,
+                        columnSizeAdaptive = true,
+                        columnWidth = 150.dp,
+                        editOption = forUpdate,
+                        deleteOption = false,
+                        horizontalDividers = true,
+                        verticalDividers = true,
                         childState = childState,
                         width = width,
-                        height = height
+                        height = height,
+                        totalItems = paginatedUsersCount
                     )
                 }
             }

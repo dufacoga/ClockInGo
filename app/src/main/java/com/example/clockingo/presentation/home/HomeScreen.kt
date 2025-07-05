@@ -46,8 +46,7 @@ fun HomeScreen(
             subItems = listOf(
                 DrawerSubItems(10, "Find existing", true),
                 DrawerSubItems(11, "Create new", true),
-                DrawerSubItems(12, "Update existing", true),
-                DrawerSubItems(13, "Delete existing", true)
+                DrawerSubItems(12, "Update existing", true)
             ),
             true
         ),
@@ -57,8 +56,7 @@ fun HomeScreen(
             subItems = listOf(
                 DrawerSubItems(20, "Find existing", true),
                 DrawerSubItems(21, "Create new", true),
-                DrawerSubItems(22, "Update existing", true),
-                DrawerSubItems(23, "Delete existing", true)
+                DrawerSubItems(22, "Update existing", true)
             ),
             true
         ),
@@ -234,14 +232,12 @@ fun HomeScreen(
                     ) {
                         Text("Welcome to ClockInGo", color = MaterialTheme.colorScheme.onSurface)
                     }
-                    10 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
+                    10 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel, forUpdate = false)
                     11 -> CreateUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
-                    12 -> Text("Users - Update existing screen coming soon")
-                    13 -> Text("Users - Delete existing screen coming soon")
+                    12 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel, forUpdate = true)
                     20 -> Text("Locations - Find existing screen coming soon")
                     21 -> Text("Locations - Create new screen coming soon")
                     22 -> Text("Locations - Update existing screen coming soon")
-                    23 -> Text("Locations - Delete existing screen coming soon")
                     30 -> Text("Entry's - Add new screen coming soon")
                     31 -> Text("Entry's - Find existing screen coming soon")
                     32 -> Text("Entry's - Update existing screen coming soon")
