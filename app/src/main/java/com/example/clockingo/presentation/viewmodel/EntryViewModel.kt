@@ -3,6 +3,7 @@ package com.example.clockingo.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.Entry
+import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,10 @@ class EntryViewModel(
 
     private val _currentEntry = MutableStateFlow<Entry?>(null)
     val currentEntry: StateFlow<Entry?> get() = _currentEntry
+
+    fun currentEntry(entry: Entry?) {
+        _currentEntry.value = entry
+    }
 
     fun loadEntries() {
         viewModelScope.launch {

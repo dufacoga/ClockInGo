@@ -3,6 +3,7 @@ package com.example.clockingo.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.Location
+import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,10 @@ class LocationViewModel(
 
     private val _currentLocation = MutableStateFlow<Location?>(null)
     val currentLocation: StateFlow<Location?> get() = _currentLocation
+
+    fun currentLocation(location: Location?) {
+        _currentLocation.value = location
+    }
 
     fun loadLocations() {
         viewModelScope.launch {

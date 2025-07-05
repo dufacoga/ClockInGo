@@ -22,6 +22,10 @@ class RoleViewModel(
     private val _currentRole = MutableStateFlow<Role?>(null)
     val currentRole: StateFlow<Role?> get() = _currentRole
 
+    fun currentRole(role: Role?) {
+        _currentRole.value = role
+    }
+
     fun loadRoles() {
         viewModelScope.launch {
             val response = getAllRolesUseCase()

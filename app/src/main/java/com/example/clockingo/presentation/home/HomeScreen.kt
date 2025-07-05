@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,9 +19,16 @@ import com.example.clockingo.ui.theme.ThemeMode
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.home.users.CreateUsersScreen
 import com.example.clockingo.presentation.home.users.FindUsersScreen
+import com.example.clockingo.presentation.home.users.UpdateUsersScreen
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
@@ -82,11 +88,46 @@ fun HomeScreen(
             true
         )
     )
-    var selectedMenu by rememberSaveable { mutableIntStateOf(0) }
+
+    val UserSaver: Saver<User?, *> = mapSaver(
+        save = { user ->
+            mapOf(
+                "id" to user?.id,
+                "name" to user?.name,
+                "phone" to user?.phone,
+                "username" to user?.username,
+                "authToken" to user?.authToken,
+                "roleId" to user?.roleId
+            )
+        },
+        restore = {
+            it["id"]?.let { id ->
+                User(
+                    id = id as Int,
+                    name = it["name"] as String,
+                    phone = it["phone"] as String?,
+                    username = it["username"] as String,
+                    authToken = it["authToken"] as String,
+                    roleId = it["roleId"] as Int
+                )
+            }
+        }
+    )
+
+    var selectedMenu by rememberSaveable { mutableStateOf(0) }
+    var selectedUser by rememberSaveable(stateSaver = UserSaver) {
+        mutableStateOf<User?>(null)
+    }
     var showDropdownMenu by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     val expandedItems = remember { mutableStateMapOf<Int, Boolean>() }
     val scrollState = rememberScrollState()
+
+    val currentUser by userViewModel.currentUser.collectAsState()
+
+    LaunchedEffect(currentUser) {
+        selectedUser = currentUser
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -232,9 +273,30 @@ fun HomeScreen(
                     ) {
                         Text("Welcome to ClockInGo", color = MaterialTheme.colorScheme.onSurface)
                     }
-                    10 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel, forUpdate = false)
+                    10 -> FindUsersScreen(
+                            userViewModel = userViewModel,
+                            roleViewModel = roleViewModel,
+                            forUpdate = false,
+                            onUserSelected = { user -> userViewModel.currentUser(user) }
+                        )
                     11 -> CreateUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
-                    12 -> FindUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel, forUpdate = true)
+                    12 -> if (selectedUser == null) {
+                        FindUsersScreen(
+                            userViewModel = userViewModel,
+                            roleViewModel = roleViewModel,
+                            forUpdate = true,
+                            onUserSelected = { user -> userViewModel.currentUser(user) }
+                        )
+                    } else {
+                        UpdateUsersScreen(
+                            userViewModel = userViewModel,
+                            roleViewModel = roleViewModel,
+                            user = selectedUser!!,
+                            onFinish = {
+                                userViewModel.currentUser(null)
+                            }
+                        )
+                    }
                     20 -> Text("Locations - Find existing screen coming soon")
                     21 -> Text("Locations - Create new screen coming soon")
                     22 -> Text("Locations - Update existing screen coming soon")

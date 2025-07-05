@@ -3,6 +3,7 @@ package com.example.clockingo.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.Exit
+import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,10 @@ class ExitViewModel(
 
     private val _currentExit = MutableStateFlow<Exit?>(null)
     val currentExit: StateFlow<Exit?> get() = _currentExit
+
+    fun currentExit(exit: Exit?) {
+        _currentExit.value = exit
+    }
 
     fun loadExits() {
         viewModelScope.launch {

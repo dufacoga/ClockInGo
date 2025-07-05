@@ -35,6 +35,10 @@ class UserViewModel(
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> get() = _currentUser
 
+    fun currentUser(user: User?) {
+        _currentUser.value = user
+    }
+
     fun logout() {
         viewModelScope.launch {
             saveLoginState(false)
@@ -87,7 +91,7 @@ class UserViewModel(
         viewModelScope.launch {
             val response = getUserByIdUseCase(id)
             if (response.isSuccessful) {
-                _currentUser.value = response.body()
+                _currentUser.value = response.body() ?: null
             }
         }
     }

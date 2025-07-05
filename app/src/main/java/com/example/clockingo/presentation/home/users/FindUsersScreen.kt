@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
+import com.example.clockingo.domain.model.Role
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.materialdatatable.MaterialDataTableC
@@ -35,7 +36,8 @@ import kotlinx.coroutines.delay
 fun FindUsersScreen(
     userViewModel: UserViewModel,
     roleViewModel: RoleViewModel,
-    forUpdate: Boolean
+    forUpdate: Boolean,
+    onUserSelected: (User) -> Unit
 ) {
     val allUsers by userViewModel.userList.collectAsState()
     val roles by roleViewModel.roleList.collectAsState()
@@ -109,25 +111,7 @@ fun FindUsersScreen(
                                 (searchName.isBlank() || it.name.contains(searchName.trim(), ignoreCase = true))
                     }
                     val paginatedUsersCount = filteredUsers.size
-                    val userRowMapper: (User) -> List<String> = if (isLandscape) {
-                        { user ->
-                            listOf(
-                                user.id.toString(),
-                                user.name,
-                                user.phone ?: "--- --- ----",
-                                user.username,
-                                roles.find { it.id == user.roleId }?.name ?: "Unknown"
-                            )
-                        }
-                    } else {
-                        { user ->
-                            listOf(
-                                user.id.toString(),
-                                user.name,
-                                user.username
-                            )
-                        }
-                    }
+                    val (userRowMapper, rowDataToUserMapper) = getUserRowMappers(isLandscape, roles)
                     userDataLoader = dataLoaderFromListWithDelay(
                         sourceProvider = { filteredUsers },
                         rowMapper = userRowMapper
@@ -136,8 +120,9 @@ fun FindUsersScreen(
                     MaterialDataTableC(
                         headers = headers,
                         dataLoader = userDataLoader,
-                        onEdit = { rowIndex -> println("Edit user at row: $rowIndex") },
-                        onDelete = { rowIndex -> println("Delete user at row: $rowIndex") },
+                        onEdit = { rowIndex, rowData -> onUserSelected(rowDataToUserMapper(rowData)); println("Edit user at row: $rowIndex") },
+                        onDelete = { rowIndex, rowData -> println("Delete user at row: $rowIndex") },
+                        onMoreVert = { rowIndex, rowData -> println("MoreVert user at row: $rowIndex") },
                         columnSizeAdaptive = true,
                         columnWidth = 150.dp,
                         editOption = forUpdate,
@@ -153,4 +138,56 @@ fun FindUsersScreen(
             }
         }
     }
+}
+
+fun getUserRowMappers(
+    isLandscape: Boolean,
+    roles: List<Role>
+): Pair<(User) -> List<String>, (List<String>) -> User> {
+
+    val userToRow: (User) -> List<String> = if (isLandscape) {
+        { user ->
+            listOf(
+                user.id.toString(),
+                user.name,
+                user.phone ?: "--- --- ----",
+                user.username,
+                roles.find { it.id == user.roleId }?.name ?: "Unknown"
+            )
+        }
+    } else {
+        { user ->
+            listOf(
+                user.id.toString(),
+                user.name,
+                user.username
+            )
+        }
+    }
+
+    val rowToUser: (List<String>) -> User = if (isLandscape) {
+        { row ->
+            User(
+                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
+                name = row.getOrNull(1) ?: "",
+                phone = row.getOrNull(2).takeIf { it != "--- --- ----" },
+                username = row.getOrNull(3) ?: "",
+                authToken = "",
+                roleId = roles.find { it.name == row.getOrNull(4) }?.id ?: 0
+            )
+        }
+    } else {
+        { row ->
+            User(
+                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
+                name = row.getOrNull(1) ?: "",
+                phone = null,
+                username = row.getOrNull(2) ?: "",
+                authToken = "",
+                roleId = 0
+            )
+        }
+    }
+
+    return Pair(userToRow, rowToUser)
 }

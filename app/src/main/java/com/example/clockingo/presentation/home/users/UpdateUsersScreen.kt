@@ -1,2 +1,176 @@
 package com.example.clockingo.presentation.home.users
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.clockingo.domain.model.User
+import com.example.clockingo.presentation.viewmodel.UserViewModel
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.clockingo.presentation.viewmodel.RoleViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpdateUsersScreen(
+    userViewModel: UserViewModel,
+    roleViewModel: RoleViewModel,
+    user: User,
+    onFinish: () -> Unit
+) {
+    val context = LocalContext.current
+    val roleList by roleViewModel.roleList.collectAsState()
+    val loadedUser by userViewModel.currentUser.collectAsState()
+
+    LaunchedEffect(Unit) {
+        roleViewModel.loadRoles()
+    }
+
+    LaunchedEffect(user.id) {
+        userViewModel.getUserById(user.id)
+    }
+
+    if (
+        loadedUser == null ||
+        loadedUser!!.name.isBlank() ||
+        loadedUser!!.phone.isNullOrBlank() ||
+        loadedUser!!.username.isBlank() ||
+        loadedUser!!.authToken.isBlank() ||
+        loadedUser!!.roleId == 0
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    var name by remember { mutableStateOf(loadedUser!!.name) }
+    var phone by remember { mutableStateOf(loadedUser!!.phone ?: "") }
+    var username by remember { mutableStateOf(loadedUser!!.username) }
+    var password by remember { mutableStateOf(loadedUser!!.authToken) }
+    var selectedRoleId by remember { mutableStateOf(loadedUser!!.roleId) }
+    var expanded by remember { mutableStateOf(false) }
+
+    BackHandler {
+        onFinish()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Update User",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Phone (Optional)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+        )
+
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                readOnly = true,
+                value = roleList.find { it.id == selectedRoleId }?.name ?: "Select a Role",
+                onValueChange = {},
+                label = { Text("Role") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                roleList.forEach { role ->
+                    DropdownMenuItem(
+                        text = { Text(role.name) },
+                        onClick = {
+                            selectedRoleId = role.id
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        Button(
+            onClick = {
+                if (name.isNotBlank() && username.isNotBlank() && password.isNotBlank() && selectedRoleId != null) {
+                    val updatedUser = user.copy(
+                        name = name,
+                        phone = if (phone.isNotBlank()) phone else null,
+                        username = username,
+                        authToken = password,
+                        roleId = selectedRoleId!!
+                    )
+                    userViewModel.updateUser(updatedUser) { isSuccess ->
+                        if (isSuccess) {
+                            Toast.makeText(context, "User updated successfully!", Toast.LENGTH_SHORT).show()
+                            onFinish()
+                        } else {
+                            Toast.makeText(context, "Failed to update user.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "Please fill in all required fields.", Toast.LENGTH_LONG).show()
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(12.dp)
+        ) {
+            Text("Update User")
+        }
+    }
+}
