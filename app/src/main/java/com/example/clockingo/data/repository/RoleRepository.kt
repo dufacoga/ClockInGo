@@ -15,7 +15,7 @@ class RoleRepository : IRoleRepository {
     override suspend fun getAllRoles(): Response<List<Role>> {
         return try {
             val query = "SELECT * FROM Roles"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val rolesDto = response.body() ?: emptyList()
             val roles = rolesDto.map { it.toDomain() }
             return Response.success(roles)
@@ -28,7 +28,7 @@ class RoleRepository : IRoleRepository {
     override suspend fun getRoleById(id: Int): Response<Role?> {
         return try {
             val query = "SELECT * FROM Roles WHERE Id = $id"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val roleDto = response.body()?.firstOrNull()
             return Response.success(roleDto?.toDomain())
         } catch (e: Exception) {
@@ -43,7 +43,7 @@ class RoleRepository : IRoleRepository {
             INSERT INTO Roles (Name) 
             VALUES ('${role.name}')
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeInsert(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in createRole", e)
             Response.error(500, null)
@@ -57,7 +57,7 @@ class RoleRepository : IRoleRepository {
             Name = '${role.name}'
             WHERE Id = ${role.id}
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeUpdate(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in updateRole", e)
             Response.error(500, null)
@@ -67,7 +67,7 @@ class RoleRepository : IRoleRepository {
     override suspend fun deleteRole(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
             val query = "DELETE FROM Roles WHERE Id = $id"
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeDelete(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in deleteRole", e)
             Response.error(500, null)

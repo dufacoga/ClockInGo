@@ -15,7 +15,7 @@ class UserRepository : IUserRepository {
     override suspend fun getAllUsers(): Response<List<User>> {
         return try {
             val query = "SELECT * FROM Users"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val usersDto = response.body() ?: emptyList()
             val users = usersDto.map { it.toDomain() }
             return Response.success(users)
@@ -28,7 +28,7 @@ class UserRepository : IUserRepository {
     override suspend fun getUserById(id: Int): Response<User?> {
         return try {
             val query = "SELECT * FROM Users WHERE id = $id"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val userDto = response.body() ?.firstOrNull()
             return Response.success(userDto?.toDomain())
         } catch (e: Exception) {
@@ -40,7 +40,7 @@ class UserRepository : IUserRepository {
     override suspend fun getUserByUser(username: String, password: String): Boolean {
         return try {
             val query = "SELECT * FROM Users WHERE Username = '$username'"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
                 val usersDto = response.body() ?: emptyList()
                 if (usersDto.isNotEmpty()) {
@@ -61,7 +61,7 @@ class UserRepository : IUserRepository {
             INSERT INTO Users (Name, Phone, Username, AuthToken, RoleId) 
             VALUES ('${user.name}', '${user.phone}', '${user.username}', '${user.authToken}', ${user.roleId})
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeInsert(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)
@@ -79,7 +79,7 @@ class UserRepository : IUserRepository {
             RoleId = '${user.roleId}'
             WHERE Id = ${user.id}
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeUpdate(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)
@@ -89,7 +89,7 @@ class UserRepository : IUserRepository {
     override suspend fun deleteUser(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
             val query = "DELETE FROM Users WHERE id = $id"
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeDelete(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)

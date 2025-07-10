@@ -15,7 +15,7 @@ class ExitRepository : IExitRepository {
     override suspend fun getAllExits(): Response<List<Exit>> {
         return try {
             val query = "SELECT * FROM Exits"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val exitsDto = response.body() ?: emptyList()
             val exits = exitsDto.map { it.toDomain() }
             return Response.success(exits)
@@ -28,7 +28,7 @@ class ExitRepository : IExitRepository {
     override suspend fun getExitById(id: Int): Response<Exit?> {
         return try {
             val query = "SELECT * FROM Exits WHERE Id = $id"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val exitDto = response.body()?.firstOrNull()
             return Response.success(exitDto?.toDomain())
         } catch (e: Exception) {
@@ -46,7 +46,7 @@ class ExitRepository : IExitRepository {
             INSERT INTO Exits (UserId, LocationId, ExitTime, EntryId, Result, IrregularBehavior, ReviewedByAdmin, UpdatedAt, IsSynced, DeviceId) 
             VALUES (${exit.userId}, ${exit.locationId}, '${exit.exitTime}', ${exit.entryId}, $resultValue, ${exit.irregularBehavior}, ${exit.reviewedByAdmin}, $updatedAtValue, ${exit.isSynced}, '${exit.deviceId}')
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeInsert(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in createExit", e)
             Response.error(500, null)
@@ -72,7 +72,7 @@ class ExitRepository : IExitRepository {
             DeviceId = '${exit.deviceId}'
             WHERE Id = ${exit.id}
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeUpdate(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in updateExit", e)
             Response.error(500, null)
@@ -82,7 +82,7 @@ class ExitRepository : IExitRepository {
     override suspend fun deleteExit(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
             val query = "DELETE FROM Exits WHERE Id = $id"
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeDelete(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in deleteExit", e)
             Response.error(500, null)

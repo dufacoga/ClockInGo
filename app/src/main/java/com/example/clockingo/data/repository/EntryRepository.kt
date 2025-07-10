@@ -15,7 +15,7 @@ class EntryRepository : IEntryRepository {
     override suspend fun getAllEntries(): Response<List<Entry>> {
         return try {
             val query = "SELECT * FROM Entries"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val entriesDto = response.body() ?: emptyList()
             val entries = entriesDto.map { it.toDomain() }
             return Response.success(entries)
@@ -28,7 +28,7 @@ class EntryRepository : IEntryRepository {
     override suspend fun getEntryById(id: Int): Response<Entry?> {
         return try {
             val query = "SELECT * FROM Entries WHERE Id = $id"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val entryDto = response.body()?.firstOrNull()
             return Response.success(entryDto?.toDomain())
         } catch (e: Exception) {
@@ -46,7 +46,7 @@ class EntryRepository : IEntryRepository {
             INSERT INTO Entries (UserId, LocationId, EntryTime, Selfie, UpdatedAt, IsSynced, DeviceId) 
             VALUES (${entry.userId}, ${entry.locationId}, '${entry.entryTime}', $selfieValue, $updatedAtValue, ${entry.isSynced}, '${entry.deviceId}')
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeInsert(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in createEntry", e)
             Response.error(500, null)
@@ -69,7 +69,7 @@ class EntryRepository : IEntryRepository {
             DeviceId = '${entry.deviceId}'
             WHERE Id = ${entry.id}
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeUpdate(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in updateEntry", e)
             Response.error(500, null)
@@ -79,7 +79,7 @@ class EntryRepository : IEntryRepository {
     override suspend fun deleteEntry(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
             val query = "DELETE FROM Entries WHERE Id = $id"
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeDelete(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in deleteEntry", e)
             Response.error(500, null)

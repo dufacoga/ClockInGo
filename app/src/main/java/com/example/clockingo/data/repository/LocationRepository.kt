@@ -15,7 +15,7 @@ class LocationRepository : ILocationRepository {
     override suspend fun getAllLocations(): Response<List<Location>> {
         return try {
             val query = "SELECT * FROM Locations"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val locationsDto = response.body() ?: emptyList()
             val locations = locationsDto.map { it.toDomain() }
             return Response.success(locations)
@@ -28,7 +28,7 @@ class LocationRepository : ILocationRepository {
     override suspend fun getLocationById(id: Int): Response<Location?> {
         return try {
             val query = "SELECT * FROM Locations WHERE Id = $id"
-            val response = api.executeQuery(SqlQueryRequest(query))
+            val response = api.executeSelect(query)
             val locationDto = response.body()?.firstOrNull()
             return Response.success(locationDto?.toDomain())
         } catch (e: Exception) {
@@ -46,7 +46,7 @@ class LocationRepository : ILocationRepository {
             INSERT INTO Locations (Code, Address, City, CreatedBy, IsCompanyOffice) 
             VALUES ('${location.code}', $addressValue, $cityValue, ${location.createdBy}, ${location.isCompanyOffice})
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeInsert(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in createLocation", e)
             Response.error(500, null)
@@ -67,7 +67,7 @@ class LocationRepository : ILocationRepository {
             IsCompanyOffice = ${location.isCompanyOffice}
             WHERE Id = ${location.id}
         """.trimIndent()
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeUpdate(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in updateLocation", e)
             Response.error(500, null)
@@ -77,7 +77,7 @@ class LocationRepository : ILocationRepository {
     override suspend fun deleteLocation(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
             val query = "DELETE FROM Locations WHERE Id = $id"
-            return api.executeNonQuery(SqlQueryRequest(query))
+            return api.executeDelete(SqlQueryRequest(query))
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in deleteLocation", e)
             Response.error(500, null)
