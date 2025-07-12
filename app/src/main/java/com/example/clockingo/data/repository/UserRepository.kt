@@ -85,7 +85,7 @@ class UserRepository : IUserRepository {
         return try {
             val dto = UpdateDto(
                 table = "Users",
-                values = mapOf(
+                set = mapOf(
                     "Name" to JsonPrimitive(user.name),
                     "Phone" to JsonPrimitive(user.phone ?: ""),
                     "Username" to JsonPrimitive(user.username),

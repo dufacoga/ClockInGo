@@ -38,6 +38,7 @@ android {
     buildFeatures {
         compose = true
     }
+    ndkVersion = "29.0.13599879 rc2"
 }
 
 dependencies {
@@ -62,6 +63,13 @@ dependencies {
     implementation(libs.datastore)
     implementation(libs.coroutines)
     implementation(libs.materialdatatablelibrary)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.barcode.scanning)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

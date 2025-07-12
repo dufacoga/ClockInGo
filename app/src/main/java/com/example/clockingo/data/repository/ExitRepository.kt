@@ -69,7 +69,7 @@ class ExitRepository : IExitRepository {
         return try {
             val dto = UpdateDto(
                 table = "Exits",
-                values = mapOf(
+                set = mapOf(
                     "UserId" to JsonPrimitive(exit.userId),
                     "LocationId" to JsonPrimitive(exit.locationId),
                     "ExitTime" to JsonPrimitive(exit.exitTime),

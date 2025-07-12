@@ -41,6 +41,22 @@ class EntryRepository : IEntryRepository {
         }
     }
 
+    override suspend fun getEntriesByUser(userId: Int): Response<List<Entry>> {
+        return try {
+            val dto = SelectDto(
+                table = "Entries",
+                where = mapOf("UserId" to JsonPrimitive(userId))
+            )
+            val response = api.select(dto)
+            val entriesDto = response.body() ?: emptyList()
+            val entries = entriesDto.map { it.toDomain() }
+            Response.success(entries)
+        } catch (e: Exception) {
+            Log.e("EntryRepository", "Exception in getEntriesByUser", e)
+            Response.error(500, null)
+        }
+    }
+
     override suspend fun createEntry(entry: Entry): Response<SqlQueryResponse<Unit>> {
         return try {
             val dto = InsertDto(
@@ -66,7 +82,7 @@ class EntryRepository : IEntryRepository {
         return try {
             val dto = UpdateDto(
                 table = "Entries",
-                values = mapOf(
+                set = mapOf(
                     "UserId" to JsonPrimitive(entry.userId),
                     "LocationId" to JsonPrimitive(entry.locationId),
                     "EntryTime" to JsonPrimitive(entry.entryTime),

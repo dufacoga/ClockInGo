@@ -41,6 +41,21 @@ class LocationRepository : ILocationRepository {
         }
     }
 
+    override suspend fun getLocationByCode(code: String): Response<Location?> {
+        return try {
+            val dto = SelectDto(
+                table = "Locations",
+                where = mapOf("Code" to JsonPrimitive(code))
+            )
+            val response = api.select(dto)
+            val locationDto = response.body()?.firstOrNull()
+            return Response.success(locationDto?.toDomain())
+        } catch (e: Exception) {
+            Log.e("LocationRepository", "Exception in getLocationByCode", e)
+            return Response.error(500, null)
+        }
+    }
+
     override suspend fun createLocation(location: Location): Response<SqlQueryResponse<Unit>> {
         return try {
             val dto = InsertDto(
@@ -64,7 +79,7 @@ class LocationRepository : ILocationRepository {
         return try {
             val dto = UpdateDto(
                 table = "Locations",
-                values = mapOf(
+                set = mapOf(
                     "Code" to JsonPrimitive(location.code),
                     "Address" to JsonPrimitive(location.address ?: ""),
                     "City" to JsonPrimitive(location.city ?: ""),

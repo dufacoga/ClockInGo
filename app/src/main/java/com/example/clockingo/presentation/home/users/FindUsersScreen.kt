@@ -1,36 +1,22 @@
 package com.example.clockingo.presentation.home.users
 
 import android.content.res.Configuration
-import android.widget.Toast
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.presentation.viewmodel.UserViewModel
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import com.example.clockingo.domain.model.Role
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.materialdatatable.MaterialDataTableC
 import com.example.materialdatatable.dataLoaderFromListWithDelay
-import com.seanproctor.datatable.DataColumn
-import com.seanproctor.datatable.material3.DataTable
-import com.seanproctor.datatable.rememberDataTableState
-import kotlinx.coroutines.delay
 
 @Composable
 fun FindUsersScreen(

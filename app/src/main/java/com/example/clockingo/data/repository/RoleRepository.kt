@@ -58,7 +58,7 @@ class RoleRepository : IRoleRepository {
         return try {
             val dto = UpdateDto(
                 table = "Roles",
-                values = mapOf("Name" to JsonPrimitive(role.name)),
+                set = mapOf("Name" to JsonPrimitive(role.name)),
                 where = mapOf("Id" to JsonPrimitive(role.id))
             )
             api.update(dto)

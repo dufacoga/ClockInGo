@@ -16,9 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.clockingo.data.local.SessionManager
+import com.example.clockingo.data.repository.EntryRepository
+import com.example.clockingo.data.repository.LocationRepository
 import com.example.clockingo.data.repository.RoleRepository
 import com.example.clockingo.data.repository.UserRepository
 import com.example.clockingo.domain.usecase.*
+import com.example.clockingo.presentation.viewmodel.EntryViewModel
+import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
@@ -26,8 +30,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val userRepository = UserRepository()
         val sessionManager = SessionManager(applicationContext)
+
+        val userRepository = UserRepository()
         val userViewModel = UserViewModel(
             GetAllUsersUseCase(userRepository),
             GetUserByIdUseCase(userRepository),
@@ -37,6 +42,7 @@ class MainActivity : ComponentActivity() {
             DeleteUserUseCase(userRepository),
             sessionManager
         )
+
         val roleRepository = RoleRepository()
         val roleViewModel = RoleViewModel(
             GetAllRolesUseCase(roleRepository),
@@ -44,6 +50,26 @@ class MainActivity : ComponentActivity() {
             CreateRoleUseCase(roleRepository),
             UpdateRoleUseCase(roleRepository),
             DeleteRoleUseCase(roleRepository)
+        )
+
+        val locationRepository = LocationRepository()
+        val locationViewModel = LocationViewModel(
+            GetAllLocationsUseCase(locationRepository),
+            GetLocationByIdUseCase(locationRepository),
+            GetLocationByCodeUseCase(locationRepository),
+            CreateLocationUseCase(locationRepository),
+            UpdateLocationUseCase(locationRepository),
+            DeleteLocationUseCase(locationRepository)
+        )
+
+        val entryRepository = EntryRepository()
+        val entryViewModel = EntryViewModel(
+            GetAllEntriesUseCase(entryRepository),
+            GetEntryByIdUseCase(entryRepository),
+            HasRecentEntryUseCase(entryRepository),
+            CreateEntryUseCase(entryRepository),
+            UpdateEntryUseCase(entryRepository),
+            DeleteEntryUseCase(entryRepository)
         )
 
         setContent {
@@ -65,7 +91,9 @@ class MainActivity : ComponentActivity() {
                         selectedTheme = selectedTheme,
                         selectedMode = selectedThemeMode,
                         userViewModel = userViewModel,
-                        roleViewModel = roleViewModel
+                        roleViewModel = roleViewModel,
+                        locationViewModel = locationViewModel,
+                        entryViewModel = entryViewModel
                     )
 
                     false -> LoginScreen(

@@ -1,5 +1,7 @@
 package com.example.clockingo.presentation.viewmodel
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.Entry
@@ -7,10 +9,14 @@ import com.example.clockingo.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class EntryViewModel(
     private val getAllEntriesUseCase: GetAllEntriesUseCase,
     private val getEntryByIdUseCase: GetEntryByIdUseCase,
+    private val hasRecentEntryUseCase: HasRecentEntryUseCase,
     private val createEntryUseCase: CreateEntryUseCase,
     private val updateEntryUseCase: UpdateEntryUseCase,
     private val deleteEntryUseCase: DeleteEntryUseCase
@@ -42,6 +48,10 @@ class EntryViewModel(
                 _currentEntry.value = response.body()
             }
         }
+    }
+
+    suspend fun hasCheckedInRecently(userId: Int): Boolean {
+        return hasRecentEntryUseCase(userId)
     }
 
     fun createEntry(entry: Entry, onResult: (Boolean) -> Unit) {

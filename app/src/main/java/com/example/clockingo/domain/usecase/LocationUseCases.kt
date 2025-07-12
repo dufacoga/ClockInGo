@@ -12,6 +12,10 @@ class GetLocationByIdUseCase(private val repository: ILocationRepository) {
     suspend operator fun invoke(id: Int): Response<Location?> = repository.getLocationById(id)
 }
 
+class GetLocationByCodeUseCase(private val repository: ILocationRepository) {
+    suspend operator fun invoke(code: String): Response<Location?> = repository.getLocationByCode(code)
+}
+
 class CreateLocationUseCase(private val repository: ILocationRepository) {
     suspend operator fun invoke(location: Location): Response<Unit> {
         val response = repository.createLocation(location)

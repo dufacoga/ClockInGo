@@ -1,10 +1,11 @@
 package com.example.clockingo.presentation.home
 
+import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,10 +26,21 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.domain.model.User
+import com.example.clockingo.domain.model.Location
+import com.example.clockingo.domain.model.Entry
+import com.example.clockingo.presentation.home.entries.ScanScreen
+import com.example.clockingo.presentation.home.entries.SelfieScreen
+import com.example.clockingo.presentation.home.locations.CreateLocationsScreen
+import com.example.clockingo.presentation.home.locations.FindLocationsScreen
+import com.example.clockingo.presentation.home.locations.QRScreen
+import com.example.clockingo.presentation.home.locations.UpdateLocationsScreen
 import com.example.clockingo.presentation.home.users.CreateUsersScreen
 import com.example.clockingo.presentation.home.users.FindUsersScreen
 import com.example.clockingo.presentation.home.users.UpdateUsersScreen
+import com.example.clockingo.presentation.viewmodel.EntryViewModel
+import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
@@ -40,7 +52,9 @@ fun HomeScreen(
     selectedTheme: ClockInGoThemeOption,
     selectedMode: ThemeMode,
     userViewModel: UserViewModel,
-    roleViewModel: RoleViewModel
+    roleViewModel: RoleViewModel,
+    locationViewModel: LocationViewModel,
+    entryViewModel: EntryViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -114,19 +128,95 @@ fun HomeScreen(
         }
     )
 
+    val LocationSaver: Saver<Location?, Any> = mapSaver(
+        save = { location ->
+            if (location == null) emptyMap()
+            else mapOf(
+                "id" to location.id,
+                "code" to location.code,
+                "address" to location.address,
+                "city" to location.city,
+                "createdBy" to location.createdBy,
+                "isCompanyOffice" to location.isCompanyOffice
+            )
+        },
+        restore = {
+            if (it.isEmpty()) null
+            else Location(
+                id = it["id"] as Int,
+                code = it["code"] as String,
+                address = it["address"] as String?,
+                city = it["city"] as String?,
+                createdBy = it["createdBy"] as Int,
+                isCompanyOffice = it["isCompanyOffice"] as Boolean
+            )
+        }
+    )
+
+    val EntrySaver: Saver<Entry?, Any> = mapSaver(
+        save = { entry ->
+            if (entry == null) emptyMap()
+            else mapOf(
+                "id" to entry.id,
+                "userId" to entry.userId,
+                "locationId" to entry.locationId,
+                "entryTime" to entry.entryTime,
+                "selfie" to entry.selfie,
+                "updatedAt" to entry.updatedAt,
+                "isSynced" to entry.isSynced,
+                "deviceId" to entry.deviceId
+            )
+        },
+        restore = {
+            if (it.isEmpty()) null
+            else Entry(
+                id = it["id"] as Int,
+                userId = it["userId"] as Int,
+                locationId = it["locationId"] as Int,
+                entryTime = it["entryTime"] as String,
+                selfie = it["selfie"] as String,
+                updatedAt = it["updatedAt"] as String,
+                isSynced = it["isSynced"] as Boolean,
+                deviceId = it["deviceId"] as String
+            )
+        }
+    )
+
     var selectedMenu by rememberSaveable { mutableStateOf(0) }
     var selectedUser by rememberSaveable(stateSaver = UserSaver) {
         mutableStateOf<User?>(null)
     }
+    var selectedLocation by rememberSaveable(stateSaver = LocationSaver) {
+        mutableStateOf<Location?>(null)
+    }
+    var selectedEntry by rememberSaveable(stateSaver = EntrySaver) {
+        mutableStateOf<Entry?>(null)
+    }
+    var scannedLocationId by rememberSaveable { mutableStateOf<Int?>(null) }
     var showDropdownMenu by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     val expandedItems = remember { mutableStateMapOf<Int, Boolean>() }
     val scrollState = rememberScrollState()
 
     val currentUser by userViewModel.currentUser.collectAsState()
+    val currentLoggedInUserId by remember { mutableStateOf(1) }
+    var qrCodeToShow by rememberSaveable { mutableStateOf<String?>(null) }
+    val currentContext = LocalContext.current
 
     LaunchedEffect(currentUser) {
         selectedUser = currentUser
+    }
+
+    val currentLocation by locationViewModel.currentLocation.collectAsState()
+    LaunchedEffect(currentLocation) {
+        selectedLocation = currentLocation
+    }
+
+    var allowScan by remember { mutableStateOf<Boolean?>(null) }
+    LaunchedEffect(selectedMenu) {
+        if (selectedMenu == 30) {
+            allowScan = !entryViewModel.hasCheckedInRecently(currentLoggedInUserId)
+        }
     }
 
     ModalNavigationDrawer(
@@ -262,6 +352,10 @@ fun HomeScreen(
             ) {
                 BackHandler(enabled = selectedMenu != 0) {
                     selectedMenu = 0
+                    selectedUser = null
+                    selectedLocation = null
+                    selectedEntry = null
+                    scannedLocationId = null
                 }
 
                 when (selectedMenu) {
@@ -297,10 +391,94 @@ fun HomeScreen(
                             }
                         )
                     }
-                    20 -> Text("Locations - Find existing screen coming soon")
-                    21 -> Text("Locations - Create new screen coming soon")
-                    22 -> Text("Locations - Update existing screen coming soon")
-                    30 -> Text("Entry's - Add new screen coming soon")
+                    20 -> if (qrCodeToShow != null) {
+                        QRScreen(
+                            locationCode = qrCodeToShow!!,
+                            onBack = { qrCodeToShow = null }
+                        )
+                    } else {
+                        FindLocationsScreen(
+                            locationViewModel = locationViewModel,
+                            forUpdate = false,
+                            onLocationSelected = { location ->
+                                locationViewModel.currentLocation(location)
+                            },
+                            onShowQR = { code ->
+                                qrCodeToShow = code
+                            }
+                        )
+                    }
+                    21 -> CreateLocationsScreen(locationViewModel = locationViewModel, currentUserId = currentLoggedInUserId) // Pass the current user ID
+                    22 -> if (selectedLocation == null) {
+                        FindLocationsScreen(
+                            locationViewModel = locationViewModel,
+                            forUpdate = true,
+                            onLocationSelected = { location -> locationViewModel.currentLocation(location) },
+                            onShowQR = {  }
+                        )
+                    } else {
+                        UpdateLocationsScreen(
+                            locationViewModel = locationViewModel,
+                            location = selectedLocation!!,
+                            onFinish = {
+                                locationViewModel.currentLocation(null)
+                                selectedLocation = null
+                            }
+                        )
+                    }
+                    30 ->{
+                        when (allowScan) {
+                            null -> Text("Checking for recent entry...")
+
+                            false -> {
+                                Toast.makeText(currentContext, "You have already checked in recently!", Toast.LENGTH_LONG).show()
+                                allowScan = null;
+                                vibrateScan(currentContext)
+                                selectedMenu = 0
+                            }
+
+                            true -> {
+                                if (scannedLocationId == null) {
+                                    ScanScreen(
+                                        locationViewModel = locationViewModel,
+                                        entryViewModel = entryViewModel,
+                                        currentUserId = currentLoggedInUserId,
+                                        onQrScanned = { id -> scannedLocationId = id },
+                                        onError = { msg ->
+                                            Toast.makeText(
+                                                currentContext,
+                                                msg,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        onGoHome = {
+                                            scannedLocationId = null
+                                            selectedMenu = 0
+                                        }
+                                    )
+                                } else {
+                                    SelfieScreen(
+                                        entryViewModel = entryViewModel,
+                                        currentUserId = currentLoggedInUserId,
+                                        currentLocationId = scannedLocationId!!,
+                                        onQrScanned = {
+                                            scannedLocationId = null
+                                            allowScan = null
+                                            selectedMenu = 0
+                                        },
+                                        onClearLocation = { scannedLocationId = null },
+                                        onError = { msg ->
+                                            Toast.makeText(
+                                                currentContext,
+                                                msg,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                     31 -> Text("Entry's - Find existing screen coming soon")
                     32 -> Text("Entry's - Update existing screen coming soon")
                     40 -> Text("Exit's - Add new screen coming soon")
@@ -327,5 +505,14 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+
+fun vibrateScan(context: Context, durationMillis: Long = 200) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE))
+    } else {
+        vibrator.vibrate(durationMillis)
     }
 }

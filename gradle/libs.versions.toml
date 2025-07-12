@@ -1,6 +1,10 @@
 [versions]
+accompanistPermissions = "0.34.0"
 agp = "8.11.0"
+barcodeScanning = "17.3.0"
+cameraCamera2 = "1.4.2"
 converterGson = "2.9.0"
+core = "3.5.2"
 dataTableMaterial3 = "0.11.5"
 dataTableMaterial3Android = "0.11.4"
 gson = "2.10.1"
@@ -10,6 +14,7 @@ coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+kotlinxSerializationJson = "1.6.3"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
@@ -21,8 +26,14 @@ datastore = "1.1.1"
 coroutines = "1.8.0"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCamera2" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCamera2" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+core = { module = "com.google.zxing:core", version.ref = "core" }
 data-table-material3 = { module = "com.seanproctor:data-table-material3", version.ref = "dataTableMaterial3" }
 data-table-material3-android = { module = "com.seanproctor:data-table-material3-android", version.ref = "dataTableMaterial3Android" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
@@ -40,6 +51,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 materialdatatablelibrary = { module = "com.github.dufacoga:MaterialDataTableLibrary", version.ref = "materialdatatablelibrary" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }

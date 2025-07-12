@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 class LocationViewModel(
     private val getAllLocationsUseCase: GetAllLocationsUseCase,
     private val getLocationByIdUseCase: GetLocationByIdUseCase,
+    private val getLocationByCodeUseCase: GetLocationByCodeUseCase,
     private val createLocationUseCase: CreateLocationUseCase,
     private val updateLocationUseCase: UpdateLocationUseCase,
     private val deleteLocationUseCase: DeleteLocationUseCase
@@ -38,6 +39,15 @@ class LocationViewModel(
     fun getLocationById(id: Int) {
         viewModelScope.launch {
             val response = getLocationByIdUseCase(id)
+            if (response.isSuccessful) {
+                _currentLocation.value = response.body()
+            }
+        }
+    }
+
+    fun getLocationByCode(code: String) {
+        viewModelScope.launch {
+            val response = getLocationByCodeUseCase(code)
             if (response.isSuccessful) {
                 _currentLocation.value = response.body()
             }
