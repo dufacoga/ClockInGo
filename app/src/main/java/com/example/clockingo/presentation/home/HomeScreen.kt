@@ -89,28 +89,28 @@ fun HomeScreen(
         )
     )
 
-    val UserSaver: Saver<User?, *> = mapSaver(
+    val UserSaver: Saver<User?, Any> = mapSaver(
         save = { user ->
-            mapOf(
-                "id" to user?.id,
-                "name" to user?.name,
-                "phone" to user?.phone,
-                "username" to user?.username,
-                "authToken" to user?.authToken,
-                "roleId" to user?.roleId
+            if (user == null) emptyMap()
+            else mapOf(
+                "id" to user.id,
+                "name" to user.name,
+                "phone" to user.phone,
+                "username" to user.username,
+                "authToken" to user.authToken,
+                "roleId" to user.roleId
             )
         },
         restore = {
-            it["id"]?.let { id ->
-                User(
-                    id = id as Int,
-                    name = it["name"] as String,
-                    phone = it["phone"] as String?,
-                    username = it["username"] as String,
-                    authToken = it["authToken"] as String,
-                    roleId = it["roleId"] as Int
-                )
-            }
+            if (it.isEmpty()) null
+            else User(
+                id = it["id"] as Int,
+                name = it["name"] as String,
+                phone = it["phone"] as String?,
+                username = it["username"] as String,
+                authToken = it["authToken"] as String,
+                roleId = it["roleId"] as Int
+            )
         }
     )
 

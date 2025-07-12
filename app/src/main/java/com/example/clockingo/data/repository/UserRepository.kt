@@ -2,11 +2,12 @@ package com.example.clockingo.data.repository
 
 import android.util.Log
 import com.example.clockingo.data.remote.api.RetrofitInstance
-import com.example.clockingo.data.remote.api.SqlQueryRequest
 import com.example.clockingo.data.remote.api.SqlQueryResponse
 import com.example.clockingo.data.remote.mapper.toDomain
+import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.repository.IUserRepository
+import com.google.gson.JsonPrimitive
 import retrofit2.Response
 
 class UserRepository : IUserRepository {
@@ -14,8 +15,8 @@ class UserRepository : IUserRepository {
 
     override suspend fun getAllUsers(): Response<List<User>> {
         return try {
-            val query = "SELECT * FROM Users"
-            val response = api.executeSelect(query)
+            val dto = SelectDto(table = "Users")
+            val response = api.select(dto)
             val usersDto = response.body() ?: emptyList()
             val users = usersDto.map { it.toDomain() }
             return Response.success(users)
@@ -27,8 +28,11 @@ class UserRepository : IUserRepository {
 
     override suspend fun getUserById(id: Int): Response<User?> {
         return try {
-            val query = "SELECT * FROM Users WHERE id = $id"
-            val response = api.executeSelect(query)
+            val dto = SelectDto(
+                table = "Users",
+                where = mapOf("Id" to JsonPrimitive(id))
+            )
+            val response = api.select(dto)
             val userDto = response.body() ?.firstOrNull()
             return Response.success(userDto?.toDomain())
         } catch (e: Exception) {
@@ -39,8 +43,11 @@ class UserRepository : IUserRepository {
 
     override suspend fun getUserByUser(username: String, password: String): Boolean {
         return try {
-            val query = "SELECT * FROM Users WHERE Username = '$username'"
-            val response = api.executeSelect(query)
+            val dto = SelectDto(
+                table = "Users",
+                where = mapOf("Username" to JsonPrimitive(username))
+            )
+            val response = api.select(dto)
             if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
                 val usersDto = response.body() ?: emptyList()
                 if (usersDto.isNotEmpty()) {
@@ -57,11 +64,17 @@ class UserRepository : IUserRepository {
 
     override suspend fun createUser(user: User): Response<SqlQueryResponse<Unit>> {
         return try {
-            val query = """
-            INSERT INTO Users (Name, Phone, Username, AuthToken, RoleId) 
-            VALUES ('${user.name}', '${user.phone}', '${user.username}', '${user.authToken}', ${user.roleId})
-        """.trimIndent()
-            return api.executeInsert(SqlQueryRequest(query))
+            val dto = InsertDto(
+                table = "Users",
+                values = mapOf(
+                    "Name" to JsonPrimitive(user.name),
+                    "Phone" to JsonPrimitive(user.phone ?: ""),
+                    "Username" to JsonPrimitive(user.username),
+                    "AuthToken" to JsonPrimitive(user.authToken),
+                    "RoleId" to JsonPrimitive(user.roleId)
+                )
+            )
+            api.insert(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)
@@ -70,16 +83,18 @@ class UserRepository : IUserRepository {
 
     override suspend fun updateUser(user: User): Response<SqlQueryResponse<Unit>> {
         return try {
-            val query = """
-            UPDATE Users SET 
-            Name = '${user.name}', 
-            Phone = '${user.phone}',
-            Username = '${user.username}',
-            AuthToken = '${user.authToken}', 
-            RoleId = '${user.roleId}'
-            WHERE Id = ${user.id}
-        """.trimIndent()
-            return api.executeUpdate(SqlQueryRequest(query))
+            val dto = UpdateDto(
+                table = "Users",
+                values = mapOf(
+                    "Name" to JsonPrimitive(user.name),
+                    "Phone" to JsonPrimitive(user.phone ?: ""),
+                    "Username" to JsonPrimitive(user.username),
+                    "AuthToken" to JsonPrimitive(user.authToken),
+                    "RoleId" to JsonPrimitive(user.roleId)
+                ),
+                where = mapOf("Id" to JsonPrimitive(user.id))
+            )
+            api.update(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)
@@ -88,8 +103,11 @@ class UserRepository : IUserRepository {
 
     override suspend fun deleteUser(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
-            val query = "DELETE FROM Users WHERE id = $id"
-            return api.executeDelete(SqlQueryRequest(query))
+            val dto = DeleteDto(
+                table = "Users",
+                where = mapOf("Id" to JsonPrimitive(id))
+            )
+            api.delete(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             Response.error(500, null)

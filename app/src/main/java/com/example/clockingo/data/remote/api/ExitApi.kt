@@ -3,21 +3,25 @@ package com.example.clockingo.data.remote.api
 import retrofit2.Response
 import retrofit2.http.*
 import com.example.clockingo.data.remote.model.ExitDto
+import com.example.clockingo.data.remote.model.api.SelectDto
+import com.example.clockingo.data.remote.model.api.InsertDto
+import com.example.clockingo.data.remote.model.api.UpdateDto
+import com.example.clockingo.data.remote.model.api.DeleteDto
 
 interface ExitApi {
     @Headers("Content-Type: application/json")
-    @GET("/api/SqlQuery/execute")
-    suspend fun executeSelect(@Query("query") query: String): Response<List<ExitDto>>
+    @POST("/api/SqlQuery/select")
+    suspend fun select(@Body request: SelectDto): Response<List<ExitDto>>
 
     @Headers("Content-Type: application/json")
-    @POST("/api/SqlQuery/execute")
-    suspend fun executeInsert(@Body request: SqlQueryRequest): Response<SqlQueryResponse<Unit>>
+    @POST("/api/SqlQuery/insert")
+    suspend fun insert(@Body request: InsertDto): Response<SqlQueryResponse<Unit>>
 
     @Headers("Content-Type: application/json")
-    @PUT("/api/SqlQuery/execute")
-    suspend fun executeUpdate(@Body request: SqlQueryRequest): Response<SqlQueryResponse<Unit>>
+    @PUT("/api/SqlQuery/update")
+    suspend fun update(@Body request: UpdateDto): Response<SqlQueryResponse<Unit>>
 
     @Headers("Content-Type: application/json")
-    @DELETE("/api/SqlQuery/execute")
-    suspend fun executeDelete(@Body request: SqlQueryRequest): Response<SqlQueryResponse<Unit>>
+    @HTTP(method = "DELETE", path = "/api/SqlQuery/delete", hasBody = true)
+    suspend fun delete(@Body request: DeleteDto): Response<SqlQueryResponse<Unit>>
 }

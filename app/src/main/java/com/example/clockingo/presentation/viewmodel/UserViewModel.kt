@@ -1,6 +1,5 @@
 package com.example.clockingo.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.User
@@ -8,9 +7,7 @@ import com.example.clockingo.domain.usecase.*
 import com.example.clockingo.data.local.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import retrofit2.Response
 
 class UserViewModel(
     private val getAllUsersUseCase: GetAllUsersUseCase,
@@ -28,12 +25,12 @@ class UserViewModel(
     private val _loggedIn = MutableStateFlow<Boolean?>(null)
     val loggedIn: StateFlow<Boolean?> get() = _loggedIn
 
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser: StateFlow<User?> get() = _currentUser
+
     fun resetLoginState() {
         _loggedIn.value = null
     }
-
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser: StateFlow<User?> get() = _currentUser
 
     fun currentUser(user: User?) {
         _currentUser.value = user
@@ -62,22 +59,6 @@ class UserViewModel(
         }
     }
 
-    fun getUserByUser(username: String, password: String, onFailure: () -> Unit) {
-        viewModelScope.launch {
-            val result = getUserByUserUseCase(username, password)
-
-            if (result == true) {
-                saveLoginState(true)
-                _loggedIn.value = true
-            }else{
-                saveLoginState(false)
-                resetLoginState()
-                _loggedIn.value = false
-                onFailure()
-            }
-        }
-    }
-
     fun loadUsers() {
         viewModelScope.launch {
             val response = getAllUsersUseCase()
@@ -91,7 +72,23 @@ class UserViewModel(
         viewModelScope.launch {
             val response = getUserByIdUseCase(id)
             if (response.isSuccessful) {
-                _currentUser.value = response.body() ?: null
+                _currentUser.value = response.body()
+            }
+        }
+    }
+
+    fun getUserByUser(username: String, password: String, onFailure: () -> Unit) {
+        viewModelScope.launch {
+            val result = getUserByUserUseCase(username, password)
+
+            if (result == true) {
+                saveLoginState(true)
+                _loggedIn.value = true
+            }else{
+                saveLoginState(false)
+                resetLoginState()
+                _loggedIn.value = false
+                onFailure()
             }
         }
     }
