@@ -8,6 +8,7 @@ import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.repository.IUserRepository
 import com.google.gson.JsonPrimitive
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class UserRepository : IUserRepository {
@@ -19,10 +20,11 @@ class UserRepository : IUserRepository {
             val response = api.select(dto)
             val usersDto = response.body() ?: emptyList()
             val users = usersDto.map { it.toDomain() }
-            return Response.success(users)
+            Response.success(users)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -34,10 +36,11 @@ class UserRepository : IUserRepository {
             )
             val response = api.select(dto)
             val userDto = response.body() ?.firstOrNull()
-            return Response.success(userDto?.toDomain())
+            Response.success(userDto?.toDomain())
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -77,7 +80,8 @@ class UserRepository : IUserRepository {
             api.insert(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -97,7 +101,8 @@ class UserRepository : IUserRepository {
             api.update(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -110,7 +115,8 @@ class UserRepository : IUserRepository {
             api.delete(dto)
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 }

@@ -8,6 +8,7 @@ import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Entry
 import com.example.clockingo.domain.repository.IEntryRepository
 import com.google.gson.JsonPrimitive
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class EntryRepository : IEntryRepository {
@@ -19,10 +20,11 @@ class EntryRepository : IEntryRepository {
             val response = api.select(dto)
             val entriesDto = response.body() ?: emptyList()
             val entries = entriesDto.map { it.toDomain() }
-            return Response.success(entries)
+            Response.success(entries)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getAllEntries", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -34,10 +36,11 @@ class EntryRepository : IEntryRepository {
             )
             val response = api.select(dto)
             val entryDto = response.body()?.firstOrNull()
-            return Response.success(entryDto?.toDomain())
+            Response.success(entryDto?.toDomain())
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntryById", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -53,7 +56,8 @@ class EntryRepository : IEntryRepository {
             Response.success(entries)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntriesByUser", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -74,7 +78,8 @@ class EntryRepository : IEntryRepository {
             api.insert(dto)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in createEntry", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -96,7 +101,8 @@ class EntryRepository : IEntryRepository {
             api.update(dto)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in updateEntry", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -109,7 +115,8 @@ class EntryRepository : IEntryRepository {
             api.delete(dto)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in deleteEntry", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 }

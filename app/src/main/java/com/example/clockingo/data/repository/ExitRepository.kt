@@ -8,6 +8,7 @@ import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Exit
 import com.example.clockingo.domain.repository.IExitRepository
 import com.google.gson.JsonPrimitive
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class ExitRepository : IExitRepository {
@@ -19,10 +20,11 @@ class ExitRepository : IExitRepository {
             val response = api.select(dto)
             val exitsDto = response.body() ?: emptyList()
             val exits = exitsDto.map { it.toDomain() }
-            return Response.success(exits)
+            Response.success(exits)
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in getAllExits", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -34,10 +36,11 @@ class ExitRepository : IExitRepository {
             )
             val response = api.select(dto)
             val exitDto = response.body()?.firstOrNull()
-            return Response.success(exitDto?.toDomain())
+            Response.success(exitDto?.toDomain())
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in getExitById", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -61,7 +64,8 @@ class ExitRepository : IExitRepository {
             api.insert(dto)
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in createExit", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -86,7 +90,8 @@ class ExitRepository : IExitRepository {
             api.update(dto)
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in updateExit", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -99,7 +104,8 @@ class ExitRepository : IExitRepository {
             api.delete(dto)
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in deleteExit", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 }

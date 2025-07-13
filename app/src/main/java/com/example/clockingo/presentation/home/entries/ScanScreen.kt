@@ -2,11 +2,12 @@ package com.example.clockingo.presentation.home.entries
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -16,10 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.example.clockingo.presentation.viewmodel.EntryViewModel
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -28,15 +28,12 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
 @SuppressLint("UnsafeOptInUsageError")
-@OptIn(ExperimentalGetImage::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ScanScreen(
     locationViewModel: LocationViewModel,
-    entryViewModel: EntryViewModel,
-    currentUserId: Int,
     onQrScanned: (Int) -> Unit,
-    onError: (String) -> Unit,
-    onGoHome: () -> Unit
+    onError: (String) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -120,10 +117,22 @@ fun ScanScreen(
 }
 
 fun vibrateScan(context: Context, durationMillis: Long = 200) {
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE))
+    val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vm = context.getSystemService(VibratorManager::class.java)
+        vm.defaultVibrator
     } else {
-        vibrator.vibrate(durationMillis)
+        context.getSystemService(Vibrator::class.java)
     }
+
+    val effect: VibrationEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        VibrationEffect.createOneShot(
+            durationMillis,
+            VibrationEffect.DEFAULT_AMPLITUDE
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        return vibrator.vibrate(durationMillis)
+    }
+
+    vibrator.vibrate(effect)
 }

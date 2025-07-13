@@ -8,6 +8,7 @@ import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Role
 import com.example.clockingo.domain.repository.IRoleRepository
 import com.google.gson.JsonPrimitive
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class RoleRepository : IRoleRepository {
@@ -19,10 +20,11 @@ class RoleRepository : IRoleRepository {
             val response = api.select(dto)
             val rolesDto = response.body() ?: emptyList()
             val roles = rolesDto.map { it.toDomain() }
-            return Response.success(roles)
+            Response.success(roles)
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getAllRoles", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -34,10 +36,11 @@ class RoleRepository : IRoleRepository {
             )
             val response = api.select(dto)
             val roleDto = response.body()?.firstOrNull()
-            return Response.success(roleDto?.toDomain())
+            Response.success(roleDto?.toDomain())
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getRoleById", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -50,7 +53,8 @@ class RoleRepository : IRoleRepository {
             api.insert(dto)
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in createRole", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -64,7 +68,8 @@ class RoleRepository : IRoleRepository {
             api.update(dto)
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in updateRole", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -77,7 +82,8 @@ class RoleRepository : IRoleRepository {
             api.delete(dto)
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in deleteRole", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 }

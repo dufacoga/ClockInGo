@@ -2,9 +2,10 @@ package com.example.clockingo.presentation.home.entries
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Base64
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -14,7 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.clockingo.domain.model.Entry
@@ -23,14 +24,14 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 import java.util.*
 import android.view.Surface
 import android.widget.Toast
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.scale
 import java.text.SimpleDateFormat
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalGetImage::class)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SelfieScreen(
     entryViewModel: EntryViewModel,
@@ -68,7 +69,7 @@ fun SelfieScreen(
     LaunchedEffect(Unit) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
         val preview = Preview.Builder().build().also {
-            it.setSurfaceProvider(previewView.surfaceProvider)
+            it.surfaceProvider = previewView.surfaceProvider
         }
 
         val cameraSelector = CameraSelector.Builder()
@@ -139,8 +140,8 @@ fun takeSelfie(
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(imageProxy: ImageProxy) {
-                val bitmap = imageProxy.toBitmap()?.resizeTo128x128()
-                val byteArray = bitmap?.toByteArray()
+                val bitmap = imageProxy.toBitmap().resizeTo(128)
+                val byteArray = bitmap.toByteArray()
                 val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
                 val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
 
@@ -176,17 +177,19 @@ fun takeSelfie(
     )
 }
 
-fun ImageProxy.toBitmap(): Bitmap? {
-    val buffer: ByteBuffer = planes[0].buffer
-    val bytes = ByteArray(buffer.remaining())
-    buffer.get(bytes)
-    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-}
+//fun ImageProxy.toBitmap(): Bitmap? {
+//    val buffer: ByteBuffer = planes[0].buffer
+//    val bytes = ByteArray(buffer.remaining())
+//    buffer.get(bytes)
+//    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+//}
 
-fun Bitmap.resizeTo256x256(): Bitmap = Bitmap.createScaledBitmap(this, 256, 256, true)
-fun Bitmap.resizeTo128x128(): Bitmap = Bitmap.createScaledBitmap(this, 128, 128, true)
-fun Bitmap.resizeTo64x64(): Bitmap = Bitmap.createScaledBitmap(this, 64, 64, true)
-fun Bitmap.resizeTo32x32(): Bitmap = Bitmap.createScaledBitmap(this, 32, 32, true)
+fun Bitmap.resizeTo(size: Int): Bitmap {
+    require(size in listOf(256, 128, 64, 32)) {
+        "Only sizes 256, 128, 64, and 32 are supported"
+    }
+    return this.scale(size, size, filter = true)
+}
 
 fun Bitmap.toByteArray(): ByteArray {
     val stream = ByteArrayOutputStream()
@@ -194,10 +197,22 @@ fun Bitmap.toByteArray(): ByteArray {
     return stream.toByteArray()
 }
 fun vibrateSelfie(context: Context, durationMillis: Long = 200) {
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE))
+    val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vm = context.getSystemService(VibratorManager::class.java)
+        vm.defaultVibrator
     } else {
-        vibrator.vibrate(durationMillis)
+        context.getSystemService(Vibrator::class.java)
     }
+
+    val effect: VibrationEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        VibrationEffect.createOneShot(
+            durationMillis,
+            VibrationEffect.DEFAULT_AMPLITUDE
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        return vibrator.vibrate(durationMillis)
+    }
+
+    vibrator.vibrate(effect)
 }

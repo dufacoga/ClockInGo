@@ -1,8 +1,10 @@
 package com.example.clockingo.presentation.home
 
 import android.content.Context
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -103,7 +105,7 @@ fun HomeScreen(
         )
     )
 
-    val UserSaver: Saver<User?, Any> = mapSaver(
+    val userSaver: Saver<User?, Any> = mapSaver(
         save = { user ->
             if (user == null) emptyMap()
             else mapOf(
@@ -128,7 +130,7 @@ fun HomeScreen(
         }
     )
 
-    val LocationSaver: Saver<Location?, Any> = mapSaver(
+    val locationSaver: Saver<Location?, Any> = mapSaver(
         save = { location ->
             if (location == null) emptyMap()
             else mapOf(
@@ -153,7 +155,7 @@ fun HomeScreen(
         }
     )
 
-    val EntrySaver: Saver<Entry?, Any> = mapSaver(
+    val entrySaver: Saver<Entry?, Any> = mapSaver(
         save = { entry ->
             if (entry == null) emptyMap()
             else mapOf(
@@ -182,15 +184,15 @@ fun HomeScreen(
         }
     )
 
-    var selectedMenu by rememberSaveable { mutableStateOf(0) }
-    var selectedUser by rememberSaveable(stateSaver = UserSaver) {
-        mutableStateOf<User?>(null)
+    var selectedMenu by rememberSaveable { mutableIntStateOf(0) }
+    var selectedUser: User? by rememberSaveable(stateSaver = userSaver) {
+        mutableStateOf(null)
     }
-    var selectedLocation by rememberSaveable(stateSaver = LocationSaver) {
-        mutableStateOf<Location?>(null)
+    var selectedLocation: Location? by rememberSaveable(stateSaver = locationSaver) {
+        mutableStateOf(null)
     }
-    var selectedEntry by rememberSaveable(stateSaver = EntrySaver) {
-        mutableStateOf<Entry?>(null)
+    var selectedEntry: Entry? by rememberSaveable(stateSaver = entrySaver) {
+        mutableStateOf(null)
     }
     var scannedLocationId by rememberSaveable { mutableStateOf<Int?>(null) }
     var showDropdownMenu by remember { mutableStateOf(false) }
@@ -199,7 +201,7 @@ fun HomeScreen(
     val scrollState = rememberScrollState()
 
     val currentUser by userViewModel.currentUser.collectAsState()
-    val currentLoggedInUserId by remember { mutableStateOf(1) }
+    val currentLoggedInUserId by remember { mutableIntStateOf(1) }
     var qrCodeToShow by rememberSaveable { mutableStateOf<String?>(null) }
     val currentContext = LocalContext.current
 
@@ -432,8 +434,8 @@ fun HomeScreen(
 
                             false -> {
                                 Toast.makeText(currentContext, "You have already checked in recently!", Toast.LENGTH_LONG).show()
-                                allowScan = null;
-                                vibrateScan(currentContext)
+                                allowScan = null
+                                vibrateHome(currentContext)
                                 selectedMenu = 0
                             }
 
@@ -441,8 +443,6 @@ fun HomeScreen(
                                 if (scannedLocationId == null) {
                                     ScanScreen(
                                         locationViewModel = locationViewModel,
-                                        entryViewModel = entryViewModel,
-                                        currentUserId = currentLoggedInUserId,
                                         onQrScanned = { id -> scannedLocationId = id },
                                         onError = { msg ->
                                             Toast.makeText(
@@ -450,10 +450,6 @@ fun HomeScreen(
                                                 msg,
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                        },
-                                        onGoHome = {
-                                            scannedLocationId = null
-                                            selectedMenu = 0
                                         }
                                     )
                                 } else {
@@ -508,11 +504,23 @@ fun HomeScreen(
     }
 }
 
-fun vibrateScan(context: Context, durationMillis: Long = 200) {
-    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-        vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE))
+fun vibrateHome(context: Context, durationMillis: Long = 200) {
+    val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vm = context.getSystemService(VibratorManager::class.java)
+        vm.defaultVibrator
     } else {
-        vibrator.vibrate(durationMillis)
+        context.getSystemService(Vibrator::class.java)
     }
+
+    val effect: VibrationEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        VibrationEffect.createOneShot(
+            durationMillis,
+            VibrationEffect.DEFAULT_AMPLITUDE
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        return vibrator.vibrate(durationMillis)
+    }
+
+    vibrator.vibrate(effect)
 }

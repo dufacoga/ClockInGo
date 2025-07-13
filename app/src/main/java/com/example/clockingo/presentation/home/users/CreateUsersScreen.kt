@@ -107,7 +107,7 @@ fun CreateUsersScreen(
                 label = { Text("Role") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
             )
             ExposedDropdownMenu(
                 expanded = expanded,
@@ -133,7 +133,7 @@ fun CreateUsersScreen(
                     val newUser = User(
                         id = 0,
                         name = name,
-                        phone = if (phone.isNotBlank()) phone else null,
+                        phone = phone.ifBlank { null },
                         username = username,
                         authToken = password,
                         roleId = selectedRoleId!!

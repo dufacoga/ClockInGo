@@ -8,6 +8,7 @@ import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.domain.repository.ILocationRepository
 import com.google.gson.JsonPrimitive
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class LocationRepository : ILocationRepository {
@@ -19,10 +20,11 @@ class LocationRepository : ILocationRepository {
             val response = api.select(dto)
             val locationsDto = response.body() ?: emptyList()
             val locations = locationsDto.map { it.toDomain() }
-            return Response.success(locations)
+            Response.success(locations)
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getAllLocations", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -34,10 +36,11 @@ class LocationRepository : ILocationRepository {
             )
             val response = api.select(dto)
             val locationDto = response.body()?.firstOrNull()
-            return Response.success(locationDto?.toDomain())
+            Response.success(locationDto?.toDomain())
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getLocationById", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -49,10 +52,11 @@ class LocationRepository : ILocationRepository {
             )
             val response = api.select(dto)
             val locationDto = response.body()?.firstOrNull()
-            return Response.success(locationDto?.toDomain())
+            Response.success(locationDto?.toDomain())
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getLocationByCode", e)
-            return Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -71,7 +75,8 @@ class LocationRepository : ILocationRepository {
             api.insert(dto)
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in createLocation", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -91,7 +96,8 @@ class LocationRepository : ILocationRepository {
             api.update(dto)
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in updateLocation", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 
@@ -104,7 +110,8 @@ class LocationRepository : ILocationRepository {
             api.delete(dto)
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in deleteLocation", e)
-            Response.error(500, null)
+            val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
+            Response.error(500, errorBody)
         }
     }
 }

@@ -59,7 +59,7 @@ fun UpdateUsersScreen(
     var phone by remember { mutableStateOf(loadedUser!!.phone ?: "") }
     var username by remember { mutableStateOf(loadedUser!!.username) }
     var password by remember { mutableStateOf(loadedUser!!.authToken) }
-    var selectedRoleId by remember { mutableStateOf(loadedUser!!.roleId) }
+    var selectedRoleId by remember { mutableIntStateOf(loadedUser!!.roleId) }
     var expanded by remember { mutableStateOf(false) }
 
     BackHandler {
@@ -127,7 +127,7 @@ fun UpdateUsersScreen(
                 label = { Text("Role") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
             )
             ExposedDropdownMenu(
                 expanded = expanded,
@@ -147,13 +147,13 @@ fun UpdateUsersScreen(
 
         Button(
             onClick = {
-                if (name.isNotBlank() && username.isNotBlank() && password.isNotBlank() && selectedRoleId != null) {
+                if (name.isNotBlank() && username.isNotBlank() && password.isNotBlank() && selectedRoleId != 0) {
                     val updatedUser = user.copy(
                         name = name,
-                        phone = if (phone.isNotBlank()) phone else null,
+                        phone = phone.ifBlank { null },
                         username = username,
                         authToken = password,
-                        roleId = selectedRoleId!!
+                        roleId = selectedRoleId
                     )
                     userViewModel.updateUser(updatedUser) { isSuccess ->
                         if (isSuccess) {
