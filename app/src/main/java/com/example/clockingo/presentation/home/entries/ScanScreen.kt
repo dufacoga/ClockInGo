@@ -1,11 +1,6 @@
 package com.example.clockingo.presentation.home.entries
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -20,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.clockingo.presentation.utils.VibrateDevice
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -107,32 +103,11 @@ fun ScanScreen(
 
     LaunchedEffect(foundLocation) {
         if (foundLocation != null) {
-            vibrateScan(context)
+            VibrateDevice.vibrate(context)
             Toast.makeText(context, "Now take a selfie!", Toast.LENGTH_SHORT).show()
             onQrScanned(foundLocation!!.id)
         }
     }
 
     AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
-}
-
-fun vibrateScan(context: Context, durationMillis: Long = 200) {
-    val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vm = context.getSystemService(VibratorManager::class.java)
-        vm.defaultVibrator
-    } else {
-        context.getSystemService(Vibrator::class.java)
-    }
-
-    val effect: VibrationEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        VibrationEffect.createOneShot(
-            durationMillis,
-            VibrationEffect.DEFAULT_AMPLITUDE
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        return vibrator.vibrate(durationMillis)
-    }
-
-    vibrator.vibrate(effect)
 }

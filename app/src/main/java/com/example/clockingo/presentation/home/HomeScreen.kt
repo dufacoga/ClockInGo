@@ -1,10 +1,5 @@
 package com.example.clockingo.presentation.home
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -41,6 +36,7 @@ import com.example.clockingo.presentation.home.locations.UpdateLocationsScreen
 import com.example.clockingo.presentation.home.users.CreateUsersScreen
 import com.example.clockingo.presentation.home.users.FindUsersScreen
 import com.example.clockingo.presentation.home.users.UpdateUsersScreen
+import com.example.clockingo.presentation.utils.VibrateDevice
 import com.example.clockingo.presentation.viewmodel.EntryViewModel
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
@@ -87,8 +83,7 @@ fun HomeScreen(
             "Entries",
             subItems = listOf(
                 DrawerSubItems(30, "Add new", true),
-                DrawerSubItems(31, "Find existing", true),
-                DrawerSubItems(32, "Update existing", true)
+                DrawerSubItems(31, "Find existing", true)
             ),
             true
         ),
@@ -435,7 +430,7 @@ fun HomeScreen(
                             false -> {
                                 Toast.makeText(currentContext, "You have already checked in recently!", Toast.LENGTH_LONG).show()
                                 allowScan = null
-                                vibrateHome(currentContext)
+                                VibrateDevice.vibrate(currentContext)
                                 selectedMenu = 0
                             }
 
@@ -476,7 +471,6 @@ fun HomeScreen(
                         }
                     }
                     31 -> Text("Entry's - Find existing screen coming soon")
-                    32 -> Text("Entry's - Update existing screen coming soon")
                     40 -> Text("Exit's - Add new screen coming soon")
                     41 -> Text("Exit's - Find existing screen coming soon")
                     42 -> Text("Exit's - Update existing screen coming soon")
@@ -502,25 +496,4 @@ fun HomeScreen(
             }
         }
     }
-}
-
-fun vibrateHome(context: Context, durationMillis: Long = 200) {
-    val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vm = context.getSystemService(VibratorManager::class.java)
-        vm.defaultVibrator
-    } else {
-        context.getSystemService(Vibrator::class.java)
-    }
-
-    val effect: VibrationEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        VibrationEffect.createOneShot(
-            durationMillis,
-            VibrationEffect.DEFAULT_AMPLITUDE
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        return vibrator.vibrate(durationMillis)
-    }
-
-    vibrator.vibrate(effect)
 }

@@ -1,6 +1,5 @@
 package com.example.clockingo.presentation.home.locations
 
-import android.util.Base64
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -15,14 +14,14 @@ import com.example.clockingo.domain.model.Location
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
+import com.example.clockingo.presentation.utils.toBase16
+import com.example.clockingo.presentation.utils.toBase64
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateLocationsScreen(
     locationViewModel: LocationViewModel,
     currentUserId: Int
 ) {
-    var code by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var isCompanyOffice by remember { mutableStateOf(false) }
@@ -90,8 +89,8 @@ fun CreateLocationsScreen(
                     val newLocation = Location(
                         id = 0,
                         code = codeGenerated3,
-                        address = if (address.isNotBlank()) address else null,
-                        city = if (city.isNotBlank()) city else null,
+                        address = address.ifBlank { null },
+                        city = city.ifBlank { null },
                         createdBy = currentUserId,
                         isCompanyOffice = isCompanyOffice
                     )
@@ -117,9 +116,3 @@ fun CreateLocationsScreen(
         }
     }
 }
-
-fun String.toBase64(): String =
-    Base64.encodeToString(this.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-
-fun String.toBase16(): String =
-    this.toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) }
