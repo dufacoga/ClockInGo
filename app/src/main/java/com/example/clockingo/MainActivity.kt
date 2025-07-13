@@ -1,21 +1,16 @@
 package com.example.clockingo
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import com.example.clockingo.presentation.login.LoginScreen
 import com.example.clockingo.presentation.home.HomeScreen
 import com.example.clockingo.ui.theme.ClockInGoThemeOption
 import com.example.clockingo.ui.theme.ClockInGoThemeWrapper
 import com.example.clockingo.ui.theme.ThemeMode
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import com.example.clockingo.data.local.SessionManager
+import com.example.clockingo.data.local.ThemePreferenceManager
 import com.example.clockingo.data.repository.EntryRepository
 import com.example.clockingo.data.repository.LocationRepository
 import com.example.clockingo.data.repository.RoleRepository
@@ -25,12 +20,14 @@ import com.example.clockingo.presentation.viewmodel.EntryViewModel
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val sessionManager = SessionManager(applicationContext)
+        val themePrefs = ThemePreferenceManager(applicationContext)
 
         val userRepository = UserRepository()
         val userViewModel = UserViewModel(
@@ -74,8 +71,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isLoggedIn by userViewModel.loggedIn.collectAsState()
-            var selectedTheme by remember { mutableStateOf(ClockInGoThemeOption.Green) }
-            var selectedThemeMode by remember { mutableStateOf(ThemeMode.System) }
+            val selectedTheme by themePrefs.selectedTheme.collectAsState(initial = ClockInGoThemeOption.Green)
+            val selectedThemeMode by themePrefs.selectedMode.collectAsState(initial = ThemeMode.System)
+            val coroutineScope = rememberCoroutineScope()
+
             LaunchedEffect(Unit) {
                 userViewModel.checkIfUserIsLoggedIn()
             }
@@ -86,8 +85,16 @@ class MainActivity : ComponentActivity() {
             ) {
                 when (isLoggedIn) {
                     true -> HomeScreen(
-                        onThemeChange = { newTheme -> selectedTheme = newTheme },
-                        onModeChange = { newMode -> selectedThemeMode = newMode },
+                        onThemeChange = { newTheme ->
+                            coroutineScope.launch {
+                                themePrefs.saveTheme(newTheme)
+                            }
+                        },
+                        onModeChange = { newMode ->
+                            coroutineScope.launch {
+                                themePrefs.saveMode(newMode)
+                            }
+                        },
                         selectedTheme = selectedTheme,
                         selectedMode = selectedThemeMode,
                         userViewModel = userViewModel,
@@ -96,11 +103,9 @@ class MainActivity : ComponentActivity() {
                         entryViewModel = entryViewModel
                     )
 
-                    false -> LoginScreen(
-                        viewModel = userViewModel
-                    )
+                    false -> LoginScreen(viewModel = userViewModel)
 
-                    null -> { }
+                    null -> {}
                 }
             }
         }

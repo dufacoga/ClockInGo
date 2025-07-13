@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.barcode.scanning)
     implementation(libs.accompanist.permissions)
     implementation(libs.core)
+    implementation(libs.datastore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
