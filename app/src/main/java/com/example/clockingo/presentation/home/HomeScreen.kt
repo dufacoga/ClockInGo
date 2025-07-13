@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.domain.model.Entry
+import com.example.clockingo.presentation.home.entries.FindEntriesScreen
 import com.example.clockingo.presentation.home.entries.ScanScreen
 import com.example.clockingo.presentation.home.entries.SelfieScreen
 import com.example.clockingo.presentation.home.locations.CreateLocationsScreen
@@ -423,7 +424,7 @@ fun HomeScreen(
                             }
                         )
                     }
-                    30 ->{
+                    30 -> {
                         when (allowScan) {
                             null -> Text("Checking for recent entry...")
 
@@ -470,7 +471,13 @@ fun HomeScreen(
                             }
                         }
                     }
-                    31 -> Text("Entry's - Find existing screen coming soon")
+                    31 -> FindEntriesScreen(
+                        entryViewModel = entryViewModel,
+                        userViewModel = userViewModel,
+                        locationViewModel = locationViewModel,
+                        forUpdate = false,
+                        onEntrySelected = { }
+                    )
                     40 -> Text("Exit's - Add new screen coming soon")
                     41 -> Text("Exit's - Find existing screen coming soon")
                     42 -> Text("Exit's - Update existing screen coming soon")
