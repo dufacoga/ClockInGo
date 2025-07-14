@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -55,10 +56,27 @@ fun FindEntriesScreen(
     } else {
         screenHeight * 0.65f
     }
+    var showPictureScreen by rememberSaveable { mutableStateOf(false) }
+    var imageToShow by rememberSaveable { mutableStateOf("") }
 
-    var searchId by remember { mutableStateOf("") }
+    if (showPictureScreen) {
+        PictureScreen(selfieBase64 = imageToShow, onBack = { showPictureScreen = false })
+        return
+    }
+
     var searchUserName by remember { mutableStateOf("") }
     var searchLocationAddress by remember { mutableStateOf("") }
+    val filteredEntries by remember(allEntries, allUsers, allLocations, searchUserName, searchLocationAddress) {
+        derivedStateOf {
+            allEntries.filter { entry ->
+                val user = allUsers.find { it.id == entry.userId }
+                val location = allLocations.find { it.id == entry.locationId }
+
+                (searchUserName.isBlank() || user?.name?.contains(searchUserName.trim(), ignoreCase = true) == true) &&
+                        (searchLocationAddress.isBlank() || "${location?.address}, ${location?.city}".contains(searchLocationAddress.trim(), ignoreCase = true))
+            }
+        }
+    }
 
     LazyColumn(
         state = parentState,
@@ -93,22 +111,13 @@ fun FindEntriesScreen(
                     .fillMaxSize()
                     .padding(vertical = 8.dp)
             ) {
-                key(searchId, searchUserName, searchLocationAddress, configuration.orientation, entryDataLoader){
+                key(searchUserName, searchLocationAddress, configuration.orientation, entryDataLoader, filteredEntries){
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {
                         listOf("ID", "User Name", "Location", "Entry Time")
                     } else {
                         listOf("ID", "User Name", "Location", "Entry Time")
-                    }
-
-                    val filteredEntries = allEntries.filter { entry ->
-                        val user = allUsers.find { it.id == entry.userId }
-                        val location = allLocations.find { it.id == entry.locationId }
-
-                        (searchId.isBlank() || entry.id.toString().contains(searchId.trim())) &&
-                                (searchUserName.isBlank() || user?.name?.contains(searchUserName.trim(), ignoreCase = true) == true) &&
-                                (searchLocationAddress.isBlank() || "${location?.address}, ${location?.city}".contains(searchLocationAddress.trim(), ignoreCase = true))
                     }
                     val paginatedEntriesCount = filteredEntries.size
 
@@ -121,9 +130,16 @@ fun FindEntriesScreen(
                     MaterialDataTableC(
                         headers = headers,
                         dataLoader = entryDataLoader,
-                        onEdit = { rowIndex, rowData  -> println("Delete entry at row: $rowIndex") },
+                        onEdit = { rowIndex, rowData  -> println("Edit entry at row: $rowIndex") },
                         onDelete = { rowIndex, rowData -> println("Delete entry at row: $rowIndex") },
-                        onMoreVert = { rowIndex, rowData -> println("MoreVert entry at row: $rowIndex") },
+                        onMoreVert = { rowIndex, rowData ->
+                            val selectedRow = rowDataToEntryMapper(rowData)
+                            val entry = allEntries.find { it.id == selectedRow.id }
+                            entry?.let {
+                                imageToShow = it.selfie ?: "No selfie available at row: $rowIndex"
+                                showPictureScreen = true
+                            }
+                        },
                         columnSizeAdaptive = true,
                         columnWidth = 150.dp,
                         editOption = forUpdate,

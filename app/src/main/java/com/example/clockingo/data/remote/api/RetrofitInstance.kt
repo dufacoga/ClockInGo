@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
     private const val BASE_URL = "https://flexiqueryapidev-b6bvgshxepapevb4.centralus-01.azurewebsites.net"
-    private const val API_KEY = "$%DUF4C0G4$%"
+    private const val API_KEY = "$%S3CUR34P1$%"
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(ApiKeyInterceptor(API_KEY))

@@ -25,6 +25,7 @@ import android.widget.Toast
 import androidx.compose.ui.unit.dp
 import com.example.clockingo.presentation.utils.resizeTo
 import com.example.clockingo.presentation.utils.toByteArray
+import com.example.clockingo.presentation.utils.toBitmap2
 import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -136,9 +137,9 @@ fun takeSelfie(
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(imageProxy: ImageProxy) {
-                val bitmap = imageProxy.toBitmap()
-                val resized = bitmap.resizeTo(128)
-                val byteArray = resized.toByteArray()
+                val bitmap = imageProxy.toBitmap2()
+                val resized = bitmap.resizeTo(512)
+                val byteArray = resized.toByteArray(16)
                 val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
                 val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
 

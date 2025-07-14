@@ -1,5 +1,6 @@
-package com.example.clockingo.presentation.home.locations
+package com.example.clockingo.presentation.home.entries
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -10,14 +11,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
-import com.example.clockingo.presentation.utils.QRCodeGenerator
+import com.example.clockingo.presentation.utils.decodeBase64ToByteArray
+import com.example.clockingo.presentation.utils.decodeBase64ToString
+import com.example.clockingo.presentation.utils.decodeByteArrayToBitmap
 
 @Composable
-fun QRScreen(
-    locationCode: String,
+fun PictureScreen(
+    selfieBase64: String,
     onBack: () -> Unit
 ) {
-    val qrBitmap = QRCodeGenerator.generateQRCode(locationCode)
+    val stringByteArray: String = selfieBase64.decodeBase64ToString()
+    val selfieByteArray: ByteArray = stringByteArray.decodeBase64ToByteArray()
+    val selfieBitmap: Bitmap = selfieByteArray.decodeByteArrayToBitmap()
+    val scaledBitmap = Bitmap.createScaledBitmap(selfieBitmap, 768, 768, true)
 
     BackHandler {
         onBack()
@@ -30,13 +36,15 @@ fun QRScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        qrBitmap?.let { bitmap ->
+        if (selfieBitmap != null) {
             AndroidView(factory = { context ->
                 ImageView(context).apply {
-                    setImageBitmap(bitmap)
+                    setImageBitmap(scaledBitmap)
                 }
             })
-        } ?: Text("Error generating QR code", color = Color.Red)
+        } else {
+            Text("Error displaying image", color = Color.Red)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

@@ -37,13 +37,13 @@ fun FindLocationsScreen(
     val screenHeight = configuration.screenHeightDp.dp
     var isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    var searchId by remember { mutableStateOf("") }
-    var searchCode by remember { mutableStateOf("") }
-    val filteredLocations by remember(allLocations, searchId, searchCode) {
+    var searchAddress by remember { mutableStateOf("") }
+    var searchCity by remember { mutableStateOf("") }
+    val filteredLocations by remember(allLocations, searchAddress, searchCity) {
         derivedStateOf {
             allLocations.filter {
-                (searchId.isBlank() || it.id.toString().contains(searchId.trim())) &&
-                        (searchCode.isBlank() || it.code.contains(searchCode.trim(), ignoreCase = true))
+                (searchAddress.isBlank() || it.address.toString().contains(searchAddress.trim())) &&
+                        (searchCity.isBlank() || it.city.toString().contains(searchCity.trim()))
             }
         }
     }
@@ -78,16 +78,16 @@ fun FindLocationsScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 OutlinedTextField(
-                    value = searchId, onValueChange = {
-                        searchId = it
+                    value = searchAddress, onValueChange = {
+                        searchAddress = it
                     },
-                    label = { Text("Find by ID") }, modifier = Modifier.weight(1f)
+                    label = { Text("Find by Address") }, modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
-                    value = searchCode, onValueChange = {
-                        searchCode = it
+                    value = searchCity, onValueChange = {
+                        searchCity = it
                     },
-                    label = { Text("Find by Code") }, modifier = Modifier.weight(1f)
+                    label = { Text("Find by City") }, modifier = Modifier.weight(1f)
                 )
             }
             Spacer(Modifier.height(16.dp))
@@ -97,17 +97,13 @@ fun FindLocationsScreen(
                     .fillMaxSize()
                     .padding(vertical = 8.dp)
             ) {
-                key(searchId, searchCode, configuration.orientation, locationDataLoader, filteredLocations){
+                key(searchAddress, searchCity, configuration.orientation, locationDataLoader, filteredLocations){
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {
                         listOf("ID", "Address", "City", "Company Office")
                     } else {
                         listOf("ID", "Address", "City")
-                    }
-                    val filteredLocations = allLocations.filter {
-                        (searchId.isBlank() || it.id.toString().contains(searchId.trim())) &&
-                                (searchCode.isBlank() || it.code.contains(searchCode.trim(), ignoreCase = true))
                     }
                     val paginatedLocationsCount = filteredLocations.size
                     val (locationRowMapper, rowDataToLocationMapper) = getLocationRowMappers(isLandscape)
@@ -124,8 +120,9 @@ fun FindLocationsScreen(
                             println("Edit location at row: $rowIndex")
                         },
                         onDelete = { rowIndex, rowData -> println("Delete location at row: $rowIndex") },
-                        onMoreVert = { rowIndex, _ ->
-                            val location = filteredLocations.getOrNull(rowIndex)
+                        onMoreVert = { rowIndex, rowData ->
+                            val selectedRow = rowDataToLocationMapper(rowData)
+                            val location = allLocations.find { it.id == selectedRow.id }
                             location?.let {
                                 qrCodeToShow = it.code
                                 showQRScreen = true
@@ -165,8 +162,8 @@ fun getLocationRowMappers(
         { location ->
             listOf(
                 location.id.toString(),
-                location.city ?: "---",
-                location.address ?: "---"
+                location.address ?: "---",
+                location.city ?: "---"
             )
         }
     }
