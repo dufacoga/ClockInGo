@@ -1,9 +1,13 @@
 package com.example.clockingo.data.repository
 
 import android.util.Log
+import com.example.clockingo.data.local.ConnectivityObserver
+import com.example.clockingo.data.local.dao.RoleDao
+import com.example.clockingo.data.local.mapper.toDomain
+import com.example.clockingo.data.local.mapper.toEntity
 import com.example.clockingo.data.remote.api.RetrofitInstance
 import com.example.clockingo.data.remote.api.SqlQueryResponse
-import com.example.clockingo.data.remote.mapper.toDomain
+import com.example.clockingo.data.remote.mapper.toDomain as DtoToDomain
 import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Role
 import com.example.clockingo.domain.repository.IRoleRepository
@@ -11,7 +15,10 @@ import com.google.gson.JsonPrimitive
 import okhttp3.ResponseBody
 import retrofit2.Response
 
-class RoleRepository : IRoleRepository {
+class RoleRepository(
+    private val dao: RoleDao,
+    private val connectivityObserver: ConnectivityObserver
+) : IRoleRepository {
     private val api = RetrofitInstance.roleApi
 
     override suspend fun getAllRoles(): Response<List<Role>> {
@@ -19,7 +26,7 @@ class RoleRepository : IRoleRepository {
             val dto = SelectDto(table = "Roles")
             val response = api.select(dto)
             val rolesDto = response.body() ?: emptyList()
-            val roles = rolesDto.map { it.toDomain() }
+            val roles = rolesDto.map { it.DtoToDomain() }
             Response.success(roles)
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getAllRoles", e)
@@ -36,7 +43,7 @@ class RoleRepository : IRoleRepository {
             )
             val response = api.select(dto)
             val roleDto = response.body()?.firstOrNull()
-            Response.success(roleDto?.toDomain())
+            Response.success(roleDto?.DtoToDomain())
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getRoleById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -50,7 +57,11 @@ class RoleRepository : IRoleRepository {
                 table = "Roles",
                 values = mapOf("Name" to JsonPrimitive(role.name))
             )
-            api.insert(dto)
+            val response = api.insert(dto)
+            if (response.isSuccessful) {
+                dao.insert(role.toEntity())
+            }
+            response
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in createRole", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -65,7 +76,11 @@ class RoleRepository : IRoleRepository {
                 set = mapOf("Name" to JsonPrimitive(role.name)),
                 where = mapOf("Id" to JsonPrimitive(role.id))
             )
-            api.update(dto)
+            val response = api.update(dto)
+            if (response.isSuccessful) {
+                dao.insert(role.toEntity())
+            }
+            response
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in updateRole", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

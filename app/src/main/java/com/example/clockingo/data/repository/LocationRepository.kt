@@ -1,9 +1,13 @@
 package com.example.clockingo.data.repository
 
 import android.util.Log
+import com.example.clockingo.data.local.ConnectivityObserver
+import com.example.clockingo.data.local.dao.LocationDao
+import com.example.clockingo.data.local.mapper.toDomain
+import com.example.clockingo.data.local.mapper.toEntity
 import com.example.clockingo.data.remote.api.RetrofitInstance
 import com.example.clockingo.data.remote.api.SqlQueryResponse
-import com.example.clockingo.data.remote.mapper.toDomain
+import com.example.clockingo.data.remote.mapper.toDomain as DtoToDomain
 import com.example.clockingo.data.remote.model.api.*
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.domain.repository.ILocationRepository
@@ -11,7 +15,10 @@ import com.google.gson.JsonPrimitive
 import okhttp3.ResponseBody
 import retrofit2.Response
 
-class LocationRepository : ILocationRepository {
+class LocationRepository(
+    private val dao: LocationDao,
+    private val connectivityObserver: ConnectivityObserver
+) : ILocationRepository {
     private val api = RetrofitInstance.locationApi
 
     override suspend fun getAllLocations(): Response<List<Location>> {
@@ -19,7 +26,7 @@ class LocationRepository : ILocationRepository {
             val dto = SelectDto(table = "Locations")
             val response = api.select(dto)
             val locationsDto = response.body() ?: emptyList()
-            val locations = locationsDto.map { it.toDomain() }
+            val locations = locationsDto.map { it.DtoToDomain() }
             Response.success(locations)
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getAllLocations", e)
@@ -36,7 +43,7 @@ class LocationRepository : ILocationRepository {
             )
             val response = api.select(dto)
             val locationDto = response.body()?.firstOrNull()
-            Response.success(locationDto?.toDomain())
+            Response.success(locationDto?.DtoToDomain())
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getLocationById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -52,7 +59,7 @@ class LocationRepository : ILocationRepository {
             )
             val response = api.select(dto)
             val locationDto = response.body()?.firstOrNull()
-            Response.success(locationDto?.toDomain())
+            Response.success(locationDto?.DtoToDomain())
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in getLocationByCode", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -72,7 +79,11 @@ class LocationRepository : ILocationRepository {
                     "IsCompanyOffice" to JsonPrimitive(location.isCompanyOffice)
                 )
             )
-            api.insert(dto)
+            val response = api.insert(dto)
+            if (response.isSuccessful) {
+                dao.insert(location.toEntity())
+            }
+            response
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in createLocation", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -93,7 +104,11 @@ class LocationRepository : ILocationRepository {
                 ),
                 where = mapOf("Id" to JsonPrimitive(location.id))
             )
-            api.update(dto)
+            val response = api.update(dto)
+            if (response.isSuccessful) {
+                dao.insert(location.toEntity())
+            }
+            response
         } catch (e: Exception) {
             Log.e("LocationRepository", "Exception in updateLocation", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

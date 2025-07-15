@@ -32,13 +32,13 @@ class MainActivity : ComponentActivity() {
         val sessionManager = SessionManager(applicationContext)
         val themePrefs = ThemePreferenceManager(applicationContext)
         val connectivityObserver = NetworkConnectivityObserver(applicationContext)
-        val database = androidx.room.Room.databaseBuilder(
+        val database = databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
             "clockingo.db"
         ).build()
 
-        val userRepository = UserRepository()
+        val userRepository = UserRepository(database.userDao(), connectivityObserver)
         val userViewModel = UserViewModel(
             GetAllUsersUseCase(userRepository),
             GetUserByIdUseCase(userRepository),
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             connectivityObserver
         )
 
-        val roleRepository = RoleRepository()
+        val roleRepository = RoleRepository(database.roleDao(), connectivityObserver)
         val roleViewModel = RoleViewModel(
             GetAllRolesUseCase(roleRepository),
             GetRoleByIdUseCase(roleRepository),
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
             DeleteRoleUseCase(roleRepository)
         )
 
-        val locationRepository = LocationRepository()
+        val locationRepository = LocationRepository(database.locationDao(), connectivityObserver)
         val locationViewModel = LocationViewModel(
             GetAllLocationsUseCase(locationRepository),
             GetLocationByIdUseCase(locationRepository),

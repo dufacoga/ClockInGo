@@ -8,6 +8,9 @@ interface EntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: EntryEntity)
 
+    @Update
+    suspend fun update(entry: EntryEntity)
+
     @Query("SELECT * FROM entries WHERE isSynced = 0")
     suspend fun getUnsyncedEntries(): List<EntryEntity>
 

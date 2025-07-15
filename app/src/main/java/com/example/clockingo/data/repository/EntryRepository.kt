@@ -123,7 +123,11 @@ class EntryRepository(
                 ),
                 where = mapOf("Id" to JsonPrimitive(entry.id))
             )
-            api.update(dto)
+            val response = api.update(dto)
+            if (response.isSuccessful) {
+                dao.insert(entry.toEntity())
+            }
+            response
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in updateEntry", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

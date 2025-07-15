@@ -2,13 +2,19 @@ package com.example.clockingo.data.work
 
 import android.content.Context
 import androidx.work.*
-import com.example.clockingo.data.local.AppDatabase
+import com.example.clockingo.data.local.AppDatabaseInstance
 import com.example.clockingo.data.local.mapper.toDomain
 import com.example.clockingo.data.remote.api.RetrofitInstance
 import com.example.clockingo.data.remote.model.api.InsertDto
 import com.google.gson.JsonPrimitive
 
-class EntrySyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+class EntrySyncWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(
+    appContext,
+    params
+) {
     override suspend fun doWork(): Result {
         val db = AppDatabaseInstance.getDatabase(applicationContext)
         val unsynced = db.entryDao().getUnsyncedEntries()
@@ -36,23 +42,6 @@ class EntrySyncWorker(appContext: Context, params: WorkerParameters) : Coroutine
             }
         }
         return Result.success()
-    }
-}
-
-object AppDatabaseInstance {
-    @Volatile
-    private var INSTANCE: AppDatabase? = null
-
-    fun getDatabase(context: Context): AppDatabase {
-        return INSTANCE ?: synchronized(this) {
-            val instance = androidx.room.Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "clockingo.db"
-            ).build()
-            INSTANCE = instance
-            instance
-        }
     }
 }
 

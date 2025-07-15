@@ -28,9 +28,9 @@ data class EntryEntity(
     val id: Int = 0,
     val userId: Int,
     val locationId: Int,
-    val entryTime: String, // ISO format preferred
-    val selfie: ByteArray?, // Imagen en base de datos
-    val updatedAt: String?, // ISO datetime
+    val entryTime: String,
+    val selfie: ByteArray?,
+    val updatedAt: String?,
     val isSynced: Boolean = false,
     val deviceId: String?
 )
