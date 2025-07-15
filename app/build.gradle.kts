@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.core)
     implementation(libs.datastore)
+    implementation(libs.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

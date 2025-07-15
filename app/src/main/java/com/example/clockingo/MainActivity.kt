@@ -9,8 +9,11 @@ import com.example.clockingo.ui.theme.ClockInGoThemeOption
 import com.example.clockingo.ui.theme.ClockInGoThemeWrapper
 import com.example.clockingo.ui.theme.ThemeMode
 import androidx.compose.runtime.*
+import androidx.room.Room.databaseBuilder
 import com.example.clockingo.data.local.SessionManager
 import com.example.clockingo.data.local.ThemePreferenceManager
+import com.example.clockingo.data.local.AppDatabase
+import com.example.clockingo.data.local.NetworkConnectivityObserver
 import com.example.clockingo.data.repository.EntryRepository
 import com.example.clockingo.data.repository.LocationRepository
 import com.example.clockingo.data.repository.RoleRepository
@@ -28,6 +31,12 @@ class MainActivity : ComponentActivity() {
 
         val sessionManager = SessionManager(applicationContext)
         val themePrefs = ThemePreferenceManager(applicationContext)
+        val connectivityObserver = NetworkConnectivityObserver(applicationContext)
+        val database = androidx.room.Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "clockingo.db"
+        ).build()
 
         val userRepository = UserRepository()
         val userViewModel = UserViewModel(
@@ -37,7 +46,8 @@ class MainActivity : ComponentActivity() {
             CreateUserUseCase(userRepository),
             UpdateUserUseCase(userRepository),
             DeleteUserUseCase(userRepository),
-            sessionManager
+            sessionManager,
+            connectivityObserver
         )
 
         val roleRepository = RoleRepository()
@@ -59,7 +69,7 @@ class MainActivity : ComponentActivity() {
             DeleteLocationUseCase(locationRepository)
         )
 
-        val entryRepository = EntryRepository()
+        val entryRepository = EntryRepository(applicationContext, database.entryDao(), connectivityObserver)
         val entryViewModel = EntryViewModel(
             GetAllEntriesUseCase(entryRepository),
             GetEntryByIdUseCase(entryRepository),
@@ -71,6 +81,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isLoggedIn by userViewModel.loggedIn.collectAsState()
+            val isOnline by userViewModel.isOnline.collectAsState(initial = true)
             val selectedTheme by themePrefs.selectedTheme.collectAsState(initial = ClockInGoThemeOption.Green)
             val selectedThemeMode by themePrefs.selectedMode.collectAsState(initial = ThemeMode.System)
             val coroutineScope = rememberCoroutineScope()
@@ -100,7 +111,8 @@ class MainActivity : ComponentActivity() {
                         userViewModel = userViewModel,
                         roleViewModel = roleViewModel,
                         locationViewModel = locationViewModel,
-                        entryViewModel = entryViewModel
+                        entryViewModel = entryViewModel,
+                        isOnline = isOnline
                     )
 
                     false -> LoginScreen(viewModel = userViewModel)

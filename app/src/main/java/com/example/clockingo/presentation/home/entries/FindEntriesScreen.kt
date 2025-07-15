@@ -111,7 +111,7 @@ fun FindEntriesScreen(
                     .fillMaxSize()
                     .padding(vertical = 8.dp)
             ) {
-                key(searchUserName, searchLocationAddress, configuration.orientation, entryDataLoader, filteredEntries){
+                key(searchUserName, searchLocationAddress, configuration.orientation, entryDataLoader, filteredEntries, allUsers, allLocations){
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {

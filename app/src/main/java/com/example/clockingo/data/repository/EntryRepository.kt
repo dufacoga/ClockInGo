@@ -1,17 +1,27 @@
 package com.example.clockingo.data.repository
 
+import android.content.Context
 import android.util.Log
+import com.example.clockingo.data.local.ConnectivityObserver
+import com.example.clockingo.data.local.dao.EntryDao
+import com.example.clockingo.data.local.mapper.toDomain
+import com.example.clockingo.data.local.mapper.toEntity
 import com.example.clockingo.data.remote.api.RetrofitInstance
 import com.example.clockingo.data.remote.api.SqlQueryResponse
-import com.example.clockingo.data.remote.mapper.toDomain
+import com.example.clockingo.data.remote.mapper.toDomain as DtoToDomain
 import com.example.clockingo.data.remote.model.api.*
+import com.example.clockingo.data.work.scheduleEntrySync
 import com.example.clockingo.domain.model.Entry
 import com.example.clockingo.domain.repository.IEntryRepository
 import com.google.gson.JsonPrimitive
 import okhttp3.ResponseBody
 import retrofit2.Response
 
-class EntryRepository : IEntryRepository {
+class EntryRepository(
+    private val context: Context,
+    private val dao: EntryDao,
+    private val connectivityObserver: ConnectivityObserver
+) : IEntryRepository {
     private val api = RetrofitInstance.entryApi
 
     override suspend fun getAllEntries(): Response<List<Entry>> {
@@ -19,7 +29,7 @@ class EntryRepository : IEntryRepository {
             val dto = SelectDto(table = "Entries")
             val response = api.select(dto)
             val entriesDto = response.body() ?: emptyList()
-            val entries = entriesDto.map { it.toDomain() }
+            val entries = entriesDto.map { it.DtoToDomain() }
             Response.success(entries)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getAllEntries", e)
@@ -36,7 +46,7 @@ class EntryRepository : IEntryRepository {
             )
             val response = api.select(dto)
             val entryDto = response.body()?.firstOrNull()
-            Response.success(entryDto?.toDomain())
+            Response.success(entryDto?.DtoToDomain())
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntryById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -52,7 +62,7 @@ class EntryRepository : IEntryRepository {
             )
             val response = api.select(dto)
             val entriesDto = response.body() ?: emptyList()
-            val entries = entriesDto.map { it.toDomain() }
+            val entries = entriesDto.map { it.DtoToDomain() }
             Response.success(entries)
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntriesByUser", e)
@@ -63,20 +73,35 @@ class EntryRepository : IEntryRepository {
 
     override suspend fun createEntry(entry: Entry): Response<SqlQueryResponse<Unit>> {
         return try {
-            val dto = InsertDto(
-                table = "Entries",
-                values = mapOf(
-                    "UserId" to JsonPrimitive(entry.userId),
-                    "LocationId" to JsonPrimitive(entry.locationId),
-                    "EntryTime" to JsonPrimitive(entry.entryTime),
-                    "Selfie" to JsonPrimitive(entry.selfie ?: ""),
-                    "UpdatedAt" to JsonPrimitive(entry.updatedAt ?: ""),
-                    "IsSynced" to JsonPrimitive(entry.isSynced),
-                    "DeviceId" to JsonPrimitive(entry.deviceId)
+            if (connectivityObserver.currentStatus()) {
+                val dto = InsertDto(
+                    table = "Entries",
+                    values = mapOf(
+                        "UserId" to JsonPrimitive(entry.userId),
+                        "LocationId" to JsonPrimitive(entry.locationId),
+                        "EntryTime" to JsonPrimitive(entry.entryTime),
+                        "Selfie" to JsonPrimitive(entry.selfie ?: ""),
+                        "UpdatedAt" to JsonPrimitive(entry.updatedAt ?: ""),
+                        "IsSynced" to JsonPrimitive(true),
+                        "DeviceId" to JsonPrimitive(entry.deviceId)
+                    )
                 )
-            )
-            api.insert(dto)
+                val response = api.insert(dto)
+                if (response.isSuccessful) {
+                    dao.insert(entry.copy(isSynced = true).toEntity())
+                } else {
+                    dao.insert(entry.copy(isSynced = false).toEntity())
+                    scheduleEntrySync(context)
+                }
+                response
+            } else {
+                dao.insert(entry.copy(isSynced = false).toEntity())
+                scheduleEntrySync(context)
+                Response.success(SqlQueryResponse(Unit))
+            }
         } catch (e: Exception) {
+            dao.insert(entry.copy(isSynced = false).toEntity())
+            scheduleEntrySync(context)
             Log.e("EntryRepository", "Exception in createEntry", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
             Response.error(500, errorBody)

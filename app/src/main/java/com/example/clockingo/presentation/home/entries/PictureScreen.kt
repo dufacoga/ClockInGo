@@ -36,15 +36,11 @@ fun PictureScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (selfieBitmap != null) {
-            AndroidView(factory = { context ->
-                ImageView(context).apply {
-                    setImageBitmap(scaledBitmap)
-                }
-            })
-        } else {
-            Text("Error displaying image", color = Color.Red)
-        }
+        AndroidView(factory = { context ->
+            ImageView(context).apply {
+                setImageBitmap(scaledBitmap)
+            }
+        })
 
         Spacer(modifier = Modifier.height(16.dp))
 

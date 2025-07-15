@@ -53,7 +53,8 @@ fun HomeScreen(
     userViewModel: UserViewModel,
     roleViewModel: RoleViewModel,
     locationViewModel: LocationViewModel,
-    entryViewModel: EntryViewModel
+    entryViewModel: EntryViewModel,
+    isOnline: Boolean
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -230,15 +231,18 @@ fun HomeScreen(
                 ) {
                     Spacer(modifier = Modifier.height(16.dp))
                     menuItems.forEach { item ->
+                        val isItemEnabled = isOnline || item.id == 0 || item.subItems.any { it.id == 30 || it.id == 40 }
                         NavigationDrawerItem(
                             label = { Text(item.title) },
                             selected = selectedMenu == item.id,
                             onClick = {
-                                if (item.subItems.isEmpty()) {
-                                    selectedMenu = item.id
-                                    scope.launch { drawerState.close() }
-                                } else {
-                                    expandedItems[item.id] = !(expandedItems[item.id] ?: false)
+                                if (isItemEnabled) {
+                                    if (item.subItems.isEmpty()) {
+                                        selectedMenu = item.id
+                                        scope.launch { drawerState.close() }
+                                    } else {
+                                        expandedItems[item.id] = !(expandedItems[item.id] ?: false)
+                                    }
                                 }
                             },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
@@ -255,8 +259,10 @@ fun HomeScreen(
                                     label = { Text(sub.title) },
                                     selected = selectedMenu == sub.id,
                                     onClick = {
-                                        selectedMenu = sub.id
-                                        scope.launch { drawerState.close() }
+                                        if (isItemEnabled) {
+                                            selectedMenu = sub.id
+                                            scope.launch { drawerState.close() }
+                                        }
                                     },
                                     modifier = Modifier
                                         .padding(start = 32.dp, top = 4.dp, bottom = 4.dp)
@@ -322,7 +328,8 @@ fun HomeScreen(
                                     onClick = {
                                         showDropdownMenu = false
                                         userViewModel.logout()
-                                    }
+                                    },
+                                    enabled = isOnline
                                 )
                             }
                         }

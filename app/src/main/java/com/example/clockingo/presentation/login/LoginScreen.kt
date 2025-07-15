@@ -1,11 +1,9 @@
 package com.example.clockingo.presentation.login
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,10 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.clockingo.R
 import com.example.clockingo.presentation.viewmodel.UserViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: UserViewModel
@@ -29,6 +24,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val context = LocalContext.current
+    val isLoading by viewModel.isLoading.collectAsState()
 
     Column(
         modifier = Modifier
@@ -71,6 +67,11 @@ fun LoginScreen(
         )
 
         Spacer(modifier = Modifier.height(32.dp))
+
+        if (isLoading) {
+            Text("Loading...", color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         Button(
             onClick = {

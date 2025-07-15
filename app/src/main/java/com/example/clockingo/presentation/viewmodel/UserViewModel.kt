@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.domain.usecase.*
 import com.example.clockingo.data.local.SessionManager
+import com.example.clockingo.data.local.ConnectivityObserver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class UserViewModel(
@@ -16,7 +18,8 @@ class UserViewModel(
     private val createUserUseCase: CreateUserUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
     private val _userList = MutableStateFlow<List<User>>(emptyList())
@@ -25,8 +28,13 @@ class UserViewModel(
     private val _loggedIn = MutableStateFlow<Boolean?>(null)
     val loggedIn: StateFlow<Boolean?> get() = _loggedIn
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading.asStateFlow()
+
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> get() = _currentUser
+
+    val isOnline: StateFlow<Boolean> get() = connectivityObserver.isConnected
 
     fun resetLoginState() {
         _loggedIn.value = null
@@ -38,9 +46,11 @@ class UserViewModel(
 
     fun logout() {
         viewModelScope.launch {
-            saveLoginState(false)
-            resetLoginState()
-            _loggedIn.value = false
+            if (connectivityObserver.currentStatus()) {
+                saveLoginState(false)
+                resetLoginState()
+                _loggedIn.value = false
+            }
         }
     }
     fun saveLoginState(loggedIn: Boolean) {
@@ -79,12 +89,18 @@ class UserViewModel(
 
     fun getUserByUser(username: String, password: String, onFailure: () -> Unit) {
         viewModelScope.launch {
+            if (!connectivityObserver.currentStatus()) {
+                onFailure()
+                return@launch
+            }
+            _isLoading.value = true
             val result = getUserByUserUseCase(username, password)
+            _isLoading.value = false
 
             if (result == true) {
                 saveLoginState(true)
                 _loggedIn.value = true
-            }else{
+            } else {
                 saveLoginState(false)
                 resetLoginState()
                 _loggedIn.value = false
