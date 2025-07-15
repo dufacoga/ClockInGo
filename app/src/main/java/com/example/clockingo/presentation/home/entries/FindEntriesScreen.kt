@@ -29,7 +29,7 @@ fun FindEntriesScreen(
     userViewModel: UserViewModel,
     locationViewModel: LocationViewModel,
     forUpdate: Boolean,
-    onEntrySelected: (Entry) -> Unit
+    isOnline: Boolean
 ) {
     val allEntries by entryViewModel.entryList.collectAsState()
     val allUsers by userViewModel.userList.collectAsState()

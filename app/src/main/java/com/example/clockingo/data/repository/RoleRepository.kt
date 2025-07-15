@@ -23,11 +23,23 @@ class RoleRepository(
 
     override suspend fun getAllRoles(): Response<List<Role>> {
         return try {
-            val dto = SelectDto(table = "Roles")
-            val response = api.select(dto)
-            val rolesDto = response.body() ?: emptyList()
-            val roles = rolesDto.map { it.DtoToDomain() }
-            Response.success(roles)
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(table = "Roles")
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val rolesDto = apiResponse.body() ?: emptyList()
+                    val roles = rolesDto.map { it.DtoToDomain() }
+                    dao.deleteAllRoles()
+                    roles.forEach { dao.insert(it.toEntity()) }
+                    Response.success(roles)
+                } else {
+                    Log.w("RoleRepository", "API failed for getAllRoles (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getAllRoles().map { it.toDomain() })
+                }
+            } else {
+                Log.i("RoleRepository", "No internet, loading getAllRoles from local DB.")
+                Response.success(dao.getAllRoles().map { it.toDomain() })
+            }
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getAllRoles", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -37,13 +49,25 @@ class RoleRepository(
 
     override suspend fun getRoleById(id: Int): Response<Role?> {
         return try {
-            val dto = SelectDto(
-                table = "Roles",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            val response = api.select(dto)
-            val roleDto = response.body()?.firstOrNull()
-            Response.success(roleDto?.DtoToDomain())
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Roles",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val roleDto = apiResponse.body()?.firstOrNull()
+                    val role = roleDto?.DtoToDomain()
+                    role?.let { dao.insert(it.toEntity()) }
+                    Response.success(role)
+                } else {
+                    Log.w("RoleRepository", "API failed for getRoleById (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getRoleById(id)?.toDomain())
+                }
+            } else {
+                Log.i("RoleRepository", "No internet, loading getRoleById from local DB.")
+                Response.success(dao.getRoleById(id)?.toDomain())
+            }
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in getRoleById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -53,6 +77,10 @@ class RoleRepository(
 
     override suspend fun createRole(role: Role): Response<SqlQueryResponse<Unit>> {
         return try {
+            if (!connectivityObserver.currentStatus()) {
+                val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+                return Response.error(503, errorBody)
+            }
             val dto = InsertDto(
                 table = "Roles",
                 values = mapOf("Name" to JsonPrimitive(role.name))
@@ -71,6 +99,10 @@ class RoleRepository(
 
     override suspend fun updateRole(role: Role): Response<SqlQueryResponse<Unit>> {
         return try {
+            if (!connectivityObserver.currentStatus()) {
+                val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+                return Response.error(503, errorBody)
+            }
             val dto = UpdateDto(
                 table = "Roles",
                 set = mapOf("Name" to JsonPrimitive(role.name)),
@@ -89,12 +121,21 @@ class RoleRepository(
     }
 
     override suspend fun deleteRole(id: Int): Response<SqlQueryResponse<Unit>> {
+        if (!connectivityObserver.currentStatus()) {
+            val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+            return Response.error(503, errorBody)
+        }
         return try {
             val dto = DeleteDto(
                 table = "Roles",
                 where = mapOf("Id" to JsonPrimitive(id))
             )
-            api.delete(dto)
+            val response = api.delete(dto)
+            if (response.isSuccessful) {
+                val roleEntity = dao.getRoleById(id)
+                roleEntity?.let { dao.delete(it) }
+            }
+            response
         } catch (e: Exception) {
             Log.e("RoleRepository", "Exception in deleteRole", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

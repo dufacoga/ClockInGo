@@ -23,11 +23,23 @@ class UserRepository(
 
     override suspend fun getAllUsers(): Response<List<User>> {
         return try {
-            val dto = SelectDto(table = "Users")
-            val response = api.select(dto)
-            val usersDto = response.body() ?: emptyList()
-            val users = usersDto.map { it.DtoToDomain() }
-            Response.success(users)
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(table = "Users")
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val usersDto = apiResponse.body() ?: emptyList()
+                    val users = usersDto.map { it.DtoToDomain() }
+                    dao.deleteAllUsers()
+                    users.forEach { dao.insert(it.toEntity()) }
+                    Response.success(users)
+                } else {
+                    Log.w("UserRepository", "API failed for getAllUsers (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getAllUsers().map { it.toDomain() })
+                }
+            } else {
+                Log.i("UserRepository", "No internet, loading getAllUsers from local DB.")
+                Response.success(dao.getAllUsers().map { it.toDomain() })
+            }
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -37,13 +49,25 @@ class UserRepository(
 
     override suspend fun getUserById(id: Int): Response<User?> {
         return try {
-            val dto = SelectDto(
-                table = "Users",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            val response = api.select(dto)
-            val userDto = response.body() ?.firstOrNull()
-            Response.success(userDto?.DtoToDomain())
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Users",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val userDto = apiResponse.body()?.firstOrNull()
+                    val user = userDto?.DtoToDomain()
+                    user?.let { dao.insert(it.toEntity()) }
+                    Response.success(user)
+                } else {
+                    Log.w("UserRepository", "API failed for getUserById (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getUserById(id)?.toDomain())
+                }
+            } else {
+                Log.i("UserRepository", "No internet, loading getUserById from local DB.")
+                Response.success(dao.getUserById(id)?.toDomain())
+            }
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -53,27 +77,37 @@ class UserRepository(
 
     override suspend fun getUserByUser(username: String, password: String): Boolean {
         return try {
-            val dto = SelectDto(
-                table = "Users",
-                where = mapOf("Username" to JsonPrimitive(username))
-            )
-            val response = api.select(dto)
-            if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
-                val usersDto = response.body() ?: emptyList()
-                if (usersDto.isNotEmpty()) {
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Users",
+                    where = mapOf("Username" to JsonPrimitive(username))
+                )
+                val response = api.select(dto)
+                if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
+                    val usersDto = response.body() ?: emptyList()
                     val user = usersDto.first().DtoToDomain()
+                    dao.insert(user.toEntity())
                     return user.authToken == password
                 }
+                false
+            } else {
+                Log.i("UserRepository", "No internet, attempting offline authentication for $username.")
+                val localUser = dao.getUserByUsername(username)
+                return localUser != null && localUser.authToken == password
             }
-            false
         } catch (e: Exception) {
-            Log.e("UserRepository", "Exception in getUserByUser", e)
-            false
+            Log.e("UserRepository", "Exception in getUserByUser (authentication), attempting local fallback", e)
+            val localUser = dao.getUserByUsername(username)
+            return localUser != null && localUser.authToken == password
         }
     }
 
     override suspend fun createUser(user: User): Response<SqlQueryResponse<Unit>> {
         return try {
+            if (!connectivityObserver.currentStatus()) {
+                val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+                return Response.error(503, errorBody)
+            }
             val dto = InsertDto(
                 table = "Users",
                 values = mapOf(
@@ -98,6 +132,10 @@ class UserRepository(
 
     override suspend fun updateUser(user: User): Response<SqlQueryResponse<Unit>> {
         return try {
+            if (!connectivityObserver.currentStatus()) {
+                val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+                return Response.error(503, errorBody)
+            }
             val dto = UpdateDto(
                 table = "Users",
                 set = mapOf(
@@ -123,11 +161,20 @@ class UserRepository(
 
     override suspend fun deleteUser(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
+            if (!connectivityObserver.currentStatus()) {
+                val errorBody: ResponseBody = ResponseBody.create(null, "No Internet Connection")
+                return Response.error(503, errorBody)
+            }
             val dto = DeleteDto(
                 table = "Users",
                 where = mapOf("Id" to JsonPrimitive(id))
             )
-            api.delete(dto)
+            val response = api.delete(dto)
+            if (response.isSuccessful) {
+                val userEntity = dao.getUserById(id)
+                userEntity?.let { dao.delete(it) }
+            }
+            response
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

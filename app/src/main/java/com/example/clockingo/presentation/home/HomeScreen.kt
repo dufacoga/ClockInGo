@@ -483,7 +483,7 @@ fun HomeScreen(
                         userViewModel = userViewModel,
                         locationViewModel = locationViewModel,
                         forUpdate = false,
-                        onEntrySelected = { }
+                        isOnline = isOnline
                     )
                     40 -> Text("Exit's - Add new screen coming soon")
                     41 -> Text("Exit's - Find existing screen coming soon")

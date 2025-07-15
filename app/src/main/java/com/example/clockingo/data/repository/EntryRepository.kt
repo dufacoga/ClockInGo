@@ -26,11 +26,23 @@ class EntryRepository(
 
     override suspend fun getAllEntries(): Response<List<Entry>> {
         return try {
-            val dto = SelectDto(table = "Entries")
-            val response = api.select(dto)
-            val entriesDto = response.body() ?: emptyList()
-            val entries = entriesDto.map { it.DtoToDomain() }
-            Response.success(entries)
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(table = "Entries")
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val entriesDto = apiResponse.body() ?: emptyList()
+                    val entries = entriesDto.map { it.DtoToDomain() }
+                    dao.deleteAllEntries()
+                    entries.forEach { dao.insert(it.copy(isSynced = true).toEntity()) }
+                    Response.success(entries)
+                } else {
+                    Log.w("EntryRepository", "API failed for getAllEntries (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getAllEntries().map { it.toDomain() })
+                }
+            } else {
+                Log.i("EntryRepository", "No internet, loading getAllEntries from local DB.")
+                Response.success(dao.getAllEntries().map { it.toDomain() })
+            }
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getAllEntries", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -40,13 +52,25 @@ class EntryRepository(
 
     override suspend fun getEntryById(id: Int): Response<Entry?> {
         return try {
-            val dto = SelectDto(
-                table = "Entries",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            val response = api.select(dto)
-            val entryDto = response.body()?.firstOrNull()
-            Response.success(entryDto?.DtoToDomain())
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Entries",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val entryDto = apiResponse.body()?.firstOrNull()
+                    val entry = entryDto?.DtoToDomain()
+                    entry?.let { dao.insert(it.copy(isSynced = true).toEntity()) } // Update specific item in cache, mark as synced
+                    Response.success(entry)
+                } else {
+                    Log.w("EntryRepository", "API failed for getEntryById (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getEntryById(id)?.toDomain())
+                }
+            } else {
+                Log.i("EntryRepository", "No internet, loading getEntryById from local DB.")
+                Response.success(dao.getEntryById(id)?.toDomain())
+            }
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntryById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -56,14 +80,25 @@ class EntryRepository(
 
     override suspend fun getEntriesByUser(userId: Int): Response<List<Entry>> {
         return try {
-            val dto = SelectDto(
-                table = "Entries",
-                where = mapOf("UserId" to JsonPrimitive(userId))
-            )
-            val response = api.select(dto)
-            val entriesDto = response.body() ?: emptyList()
-            val entries = entriesDto.map { it.DtoToDomain() }
-            Response.success(entries)
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Entries",
+                    where = mapOf("UserId" to JsonPrimitive(userId))
+                )
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val entriesDto = apiResponse.body() ?: emptyList()
+                    val entries = entriesDto.map { it.DtoToDomain() }
+                    entries.forEach { dao.insert(it.copy(isSynced = true).toEntity()) }
+                    Response.success(entries)
+                } else {
+                    Log.w("EntryRepository", "API failed for getEntriesByUser (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getEntriesByUser(userId).map { it.toDomain() })
+                }
+            } else {
+                Log.i("EntryRepository", "No internet, loading getEntriesByUser from local DB.")
+                Response.success(dao.getEntriesByUser(userId).map { it.toDomain() })
+            }
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in getEntriesByUser", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -110,25 +145,35 @@ class EntryRepository(
 
     override suspend fun updateEntry(entry: Entry): Response<SqlQueryResponse<Unit>> {
         return try {
-            val dto = UpdateDto(
-                table = "Entries",
-                set = mapOf(
-                    "UserId" to JsonPrimitive(entry.userId),
-                    "LocationId" to JsonPrimitive(entry.locationId),
-                    "EntryTime" to JsonPrimitive(entry.entryTime),
-                    "Selfie" to JsonPrimitive(entry.selfie ?: ""),
-                    "UpdatedAt" to JsonPrimitive(entry.updatedAt ?: ""),
-                    "IsSynced" to JsonPrimitive(entry.isSynced),
-                    "DeviceId" to JsonPrimitive(entry.deviceId)
-                ),
-                where = mapOf("Id" to JsonPrimitive(entry.id))
-            )
-            val response = api.update(dto)
-            if (response.isSuccessful) {
-                dao.insert(entry.toEntity())
+            dao.update(entry.copy(isSynced = false).toEntity())
+            if (connectivityObserver.currentStatus()) {
+                val dto = UpdateDto(
+                    table = "Entries",
+                    set = mapOf(
+                        "UserId" to JsonPrimitive(entry.userId),
+                        "LocationId" to JsonPrimitive(entry.locationId),
+                        "EntryTime" to JsonPrimitive(entry.entryTime),
+                        "Selfie" to JsonPrimitive(entry.selfie ?: ""),
+                        "UpdatedAt" to JsonPrimitive(entry.updatedAt ?: ""),
+                        "IsSynced" to JsonPrimitive(true),
+                        "DeviceId" to JsonPrimitive(entry.deviceId)
+                    ),
+                    where = mapOf("Id" to JsonPrimitive(entry.id))
+                )
+                val response = api.update(dto)
+                if (response.isSuccessful) {
+                    dao.update(entry.copy(isSynced = true).toEntity())
+                } else {
+                    scheduleEntrySync(context)
+                }
+                response
+            } else {
+                scheduleEntrySync(context)
+                Response.success(SqlQueryResponse(Unit))
             }
-            response
         } catch (e: Exception) {
+            dao.update(entry.copy(isSynced = false).toEntity())
+            scheduleEntrySync(context)
             Log.e("EntryRepository", "Exception in updateEntry", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
             Response.error(500, errorBody)
@@ -137,11 +182,22 @@ class EntryRepository(
 
     override suspend fun deleteEntry(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
-            val dto = DeleteDto(
-                table = "Entries",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            api.delete(dto)
+            dao.deleteById(id)
+            if (connectivityObserver.currentStatus()) {
+                val dto = DeleteDto(
+                    table = "Entries",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val response = api.delete(dto)
+                if (!response.isSuccessful) {
+                    Log.e("EntryRepository", "API deletion of Entry $id failed, consider re-adding to local as pending.")
+                    scheduleEntrySync(context)
+                }
+                response
+            } else {
+                scheduleEntrySync(context)
+                Response.success(SqlQueryResponse(Unit))
+            }
         } catch (e: Exception) {
             Log.e("EntryRepository", "Exception in deleteEntry", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")

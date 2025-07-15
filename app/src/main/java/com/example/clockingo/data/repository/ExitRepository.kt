@@ -11,7 +11,7 @@ import com.example.clockingo.data.remote.api.RetrofitInstance
 import com.example.clockingo.data.remote.api.SqlQueryResponse
 import com.example.clockingo.data.remote.mapper.toDomain as DtoToDomain
 import com.example.clockingo.data.remote.model.api.*
-import com.example.clockingo.data.work.scheduleEntrySync
+import com.example.clockingo.data.work.scheduleExitSync
 import com.example.clockingo.domain.model.Exit
 import com.example.clockingo.domain.repository.IExitRepository
 import com.google.gson.JsonPrimitive
@@ -27,11 +27,23 @@ class ExitRepository(
 
     override suspend fun getAllExits(): Response<List<Exit>> {
         return try {
-            val dto = SelectDto(table = "Exits")
-            val response = api.select(dto)
-            val exitsDto = response.body() ?: emptyList()
-            val exits = exitsDto.map { it.DtoToDomain() }
-            Response.success(exits)
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(table = "Exits")
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val exitsDto = apiResponse.body() ?: emptyList()
+                    val exits = exitsDto.map { it.DtoToDomain() }
+                    dao.deleteAllExits()
+                    exits.forEach { dao.insert(it.copy(isSynced = true).toEntity()) }
+                    Response.success(exits)
+                } else {
+                    Log.w("ExitRepository", "API failed for getAllExits (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getAllExits().map { it.toDomain() })
+                }
+            } else {
+                Log.i("ExitRepository", "No internet, loading getAllExits from local DB.")
+                Response.success(dao.getAllExits().map { it.toDomain() })
+            }
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in getAllExits", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -41,13 +53,25 @@ class ExitRepository(
 
     override suspend fun getExitById(id: Int): Response<Exit?> {
         return try {
-            val dto = SelectDto(
-                table = "Exits",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            val response = api.select(dto)
-            val exitDto = response.body()?.firstOrNull()
-            Response.success(exitDto?.DtoToDomain())
+            if (connectivityObserver.currentStatus()) {
+                val dto = SelectDto(
+                    table = "Exits",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val apiResponse = api.select(dto)
+                if (apiResponse.isSuccessful) {
+                    val exitDto = apiResponse.body()?.firstOrNull()
+                    val exit = exitDto?.DtoToDomain()
+                    exit?.let { dao.insert(it.copy(isSynced = true).toEntity()) }
+                    Response.success(exit)
+                } else {
+                    Log.w("ExitRepository", "API failed for getExitById (${apiResponse.code()}), loading from local DB.")
+                    Response.success(dao.getExitById(id)?.toDomain())
+                }
+            } else {
+                Log.i("ExitRepository", "No internet, loading getExitById from local DB.")
+                Response.success(dao.getExitById(id)?.toDomain())
+            }
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in getExitById", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
@@ -69,7 +93,7 @@ class ExitRepository(
                         "IrregularBehavior" to JsonPrimitive(exit.irregularBehavior),
                         "ReviewedByAdmin" to JsonPrimitive(exit.reviewedByAdmin),
                         "UpdatedAt" to JsonPrimitive(exit.updatedAt ?: ""),
-                        "IsSynced" to JsonPrimitive(exit.isSynced),
+                        "IsSynced" to JsonPrimitive(true),
                         "DeviceId" to JsonPrimitive(exit.deviceId)
                     )
                 )
@@ -78,17 +102,17 @@ class ExitRepository(
                     dao.insert(exit.copy(isSynced = true).toEntity())
                 } else {
                     dao.insert(exit.copy(isSynced = false).toEntity())
-                    scheduleEntrySync(context)
+                    scheduleExitSync(context)
                 }
                 response
             } else {
                 dao.insert(exit.copy(isSynced = false).toEntity())
-                scheduleEntrySync(context)
+                scheduleExitSync(context)
                 Response.success(SqlQueryResponse(Unit))
             }
         } catch (e: Exception) {
             dao.insert(exit.copy(isSynced = false).toEntity())
-            scheduleEntrySync(context)
+            scheduleExitSync(context)
             Log.e("ExitRepository", "Exception in createExit", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
             Response.error(500, errorBody)
@@ -97,28 +121,38 @@ class ExitRepository(
 
     override suspend fun updateExit(exit: Exit): Response<SqlQueryResponse<Unit>> {
         return try {
-            val dto = UpdateDto(
-                table = "Exits",
-                set = mapOf(
-                    "UserId" to JsonPrimitive(exit.userId),
-                    "LocationId" to JsonPrimitive(exit.locationId),
-                    "ExitTime" to JsonPrimitive(exit.exitTime),
-                    "EntryId" to JsonPrimitive(exit.entryId),
-                    "Result" to JsonPrimitive(exit.result ?: ""),
-                    "IrregularBehavior" to JsonPrimitive(exit.irregularBehavior),
-                    "ReviewedByAdmin" to JsonPrimitive(exit.reviewedByAdmin),
-                    "UpdatedAt" to JsonPrimitive(exit.updatedAt ?: ""),
-                    "IsSynced" to JsonPrimitive(exit.isSynced),
-                    "DeviceId" to JsonPrimitive(exit.deviceId)
-                ),
-                where = mapOf("Id" to JsonPrimitive(exit.id))
-            )
-            val response = api.update(dto)
-            if (response.isSuccessful) {
-                dao.insert(exit.toEntity())
+            dao.update(exit.copy(isSynced = false).toEntity())
+            if (connectivityObserver.currentStatus()) {
+                val dto = UpdateDto(
+                    table = "Exits",
+                    set = mapOf(
+                        "UserId" to JsonPrimitive(exit.userId),
+                        "LocationId" to JsonPrimitive(exit.locationId),
+                        "ExitTime" to JsonPrimitive(exit.exitTime),
+                        "EntryId" to JsonPrimitive(exit.entryId),
+                        "Result" to JsonPrimitive(exit.result ?: ""),
+                        "IrregularBehavior" to JsonPrimitive(exit.irregularBehavior),
+                        "ReviewedByAdmin" to JsonPrimitive(exit.reviewedByAdmin),
+                        "UpdatedAt" to JsonPrimitive(exit.updatedAt ?: ""),
+                        "IsSynced" to JsonPrimitive(true),
+                        "DeviceId" to JsonPrimitive(exit.deviceId)
+                    ),
+                    where = mapOf("Id" to JsonPrimitive(exit.id))
+                )
+                val response = api.update(dto)
+                if (response.isSuccessful) {
+                    dao.update(exit.copy(isSynced = true).toEntity())
+                } else {
+                    scheduleExitSync(context)
+                }
+                response
+            } else {
+                scheduleExitSync(context)
+                Response.success(SqlQueryResponse(Unit))
             }
-            response
         } catch (e: Exception) {
+            dao.update(exit.copy(isSynced = false).toEntity())
+            scheduleExitSync(context)
             Log.e("ExitRepository", "Exception in updateExit", e)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
             Response.error(500, errorBody)
@@ -127,13 +161,25 @@ class ExitRepository(
 
     override suspend fun deleteExit(id: Int): Response<SqlQueryResponse<Unit>> {
         return try {
-            val dto = DeleteDto(
-                table = "Exits",
-                where = mapOf("Id" to JsonPrimitive(id))
-            )
-            api.delete(dto)
+            dao.deleteById(id)
+            if (connectivityObserver.currentStatus()) {
+                val dto = DeleteDto(
+                    table = "Exits",
+                    where = mapOf("Id" to JsonPrimitive(id))
+                )
+                val response = api.delete(dto)
+                if (!response.isSuccessful) {
+                    Log.e("ExitRepository", "API deletion of Exit $id failed, consider re-adding to local as pending.")
+                    scheduleExitSync(context)
+                }
+                response
+            } else {
+                scheduleExitSync(context)
+                Response.success(SqlQueryResponse(Unit))
+            }
         } catch (e: Exception) {
             Log.e("ExitRepository", "Exception in deleteExit", e)
+            scheduleExitSync(context)
             val errorBody: ResponseBody = ResponseBody.create(null, "Internal Server Error")
             Response.error(500, errorBody)
         }

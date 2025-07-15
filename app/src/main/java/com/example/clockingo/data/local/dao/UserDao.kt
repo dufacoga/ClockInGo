@@ -11,6 +11,12 @@ interface UserDao {
     @Update
     suspend fun update(user: UserEntity)
 
+    @Delete
+    suspend fun delete(location: UserEntity)
+
+    @Query("DELETE FROM users")
+    suspend fun deleteAllUsers()
+
     @Query("SELECT * FROM users WHERE id = :id")
     suspend fun getUserById(id: Int): UserEntity?
 
