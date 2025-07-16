@@ -30,7 +30,7 @@ fun UpdateUsersScreen(
 ) {
     val context = LocalContext.current
     val roleList by roleViewModel.roleList.collectAsState()
-    val loadedUser by userViewModel.currentUser.collectAsState()
+    val loadedUser by userViewModel.userToEdit.collectAsState()
 
     LaunchedEffect(Unit) {
         roleViewModel.loadRoles()

@@ -162,10 +162,6 @@ fun HomeScreen(
     var qrCodeToShow by rememberSaveable { mutableStateOf<String?>(null) }
     val currentContext = LocalContext.current
 
-    LaunchedEffect(currentUser) {
-        selectedUser = currentUser
-    }
-
     if (currentUser == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -207,17 +203,17 @@ fun HomeScreen(
                     ),
                     true
                 ),
-                DrawerMenuItem(
-                    4,
-                    stringResource(R.string.home_drawer_exits),
-                    subItems = listOf(
-                        DrawerSubItems(40, stringResource(R.string.home_drawer_add_new), true),
-                        DrawerSubItems(41, stringResource(R.string.home_drawer_find_existing), true),
-                        DrawerSubItems(42, stringResource(R.string.home_drawer_update_existing), true),
-                        DrawerSubItems(43, stringResource(R.string.home_drawer_audit_existing), true)
-                    ),
-                    true
-                )
+//                DrawerMenuItem(
+//                    4,
+//                    stringResource(R.string.home_drawer_exits),
+//                    subItems = listOf(
+//                        DrawerSubItems(40, stringResource(R.string.home_drawer_add_new), true),
+//                        DrawerSubItems(41, stringResource(R.string.home_drawer_find_existing), true),
+//                        DrawerSubItems(42, stringResource(R.string.home_drawer_update_existing), true),
+//                        DrawerSubItems(43, stringResource(R.string.home_drawer_audit_existing), true)
+//                    ),
+//                    true
+//                )
             )
         }
         2 -> {
@@ -424,7 +420,7 @@ fun HomeScreen(
                             userViewModel = userViewModel,
                             roleViewModel = roleViewModel,
                             forUpdate = false,
-                            onUserSelected = { user -> userViewModel.currentUser(user) }
+                            onUserSelected = { }
                         )
                     11 -> CreateUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
                     12 -> if (selectedUser == null) {
@@ -432,7 +428,7 @@ fun HomeScreen(
                             userViewModel = userViewModel,
                             roleViewModel = roleViewModel,
                             forUpdate = true,
-                            onUserSelected = { user -> userViewModel.currentUser(user) }
+                            onUserSelected = { user -> selectedUser = user }
                         )
                     } else {
                         UpdateUsersScreen(
@@ -440,7 +436,9 @@ fun HomeScreen(
                             roleViewModel = roleViewModel,
                             user = selectedUser!!,
                             onFinish = {
-                                userViewModel.currentUser(null)
+                                userViewModel.clearUserToEdit()
+                                selectedUser = null
+                                selectedMenu = 12
                             }
                         )
                     }
@@ -476,6 +474,7 @@ fun HomeScreen(
                             onFinish = {
                                 locationViewModel.currentLocation(null)
                                 selectedLocation = null
+                                selectedMenu = 22
                             }
                         )
                     }

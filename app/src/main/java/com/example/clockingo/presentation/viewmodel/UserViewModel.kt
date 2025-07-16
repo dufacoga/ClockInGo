@@ -34,14 +34,17 @@ class UserViewModel(
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> get() = _currentUser
 
+    private val _userToEdit = MutableStateFlow<User?>(null)
+    val userToEdit: StateFlow<User?> get() = _userToEdit
+
     val isOnline: StateFlow<Boolean> get() = connectivityObserver.isConnected
 
     fun resetLoginState() {
         _loggedIn.value = null
     }
 
-    fun currentUser(user: User?) {
-        _currentUser.value = user
+    fun clearUserToEdit() {
+        _userToEdit.value = null
     }
 
     fun logout() {
@@ -87,7 +90,7 @@ class UserViewModel(
         viewModelScope.launch {
             val response = getUserByIdUseCase(id)
             if (response.isSuccessful) {
-                _currentUser.value = response.body()
+                _userToEdit.value = response.body()
             }
         }
     }
