@@ -11,6 +11,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
 import com.example.clockingo.presentation.utils.QRCodeGenerator
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun QRScreen(
@@ -36,12 +38,12 @@ fun QRScreen(
                     setImageBitmap(bitmap)
                 }
             })
-        } ?: Text("Error generating QR code", color = Color.Red)
+        } ?: Text(stringResource(R.string.qr_screen_qr_error), color = Color.Red)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.common_back))
         }
     }
 }

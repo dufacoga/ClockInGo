@@ -7,15 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import com.example.clockingo.presentation.utils.decodeBase64ToByteArray
 import com.example.clockingo.presentation.utils.decodeBase64ToString
 import com.example.clockingo.presentation.utils.decodeByteArrayToBitmap
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun PictureScreen(
@@ -47,7 +46,7 @@ fun PictureScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = onBack) {
-            Text("Back")
+            Text(stringResource(R.string.common_back))
         }
     }
 }

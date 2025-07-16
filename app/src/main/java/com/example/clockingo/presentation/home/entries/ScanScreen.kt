@@ -22,6 +22,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @SuppressLint("UnsafeOptInUsageError")
 @OptIn(ExperimentalPermissionsApi::class)
@@ -45,7 +47,7 @@ fun ScanScreen(
     }
 
     if (!cameraPermissionState.status.isGranted) {
-        Text("The app needs camera permission to scan QR codes.")
+        Text(stringResource(R.string.scan_camera_permission_needed))
         return
     }
 
@@ -83,7 +85,7 @@ fun ScanScreen(
                             locationViewModel.getLocationByCode(rawValue)
                         }
                     }
-                    .addOnFailureListener { onError("Error scanning the QR code") }
+                    .addOnFailureListener { onError(context.getString(R.string.scan_qr_error)) }
                     .addOnCompleteListener { imageProxy.close() }
             } else {
                 imageProxy.close()
@@ -95,16 +97,16 @@ fun ScanScreen(
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, analysis)
         } catch (e: Exception) {
-            onError("Error starting camera: ${e.message}")
+            onError(context.getString(R.string.scan_camera_start_error, e.message ?: R.string.scan_unknown))
         }
-        Toast.makeText(context, "Please scan the QR code first!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.scan_prompt_scan_qr), Toast.LENGTH_SHORT).show()
     }
     val foundLocation by locationViewModel.currentLocation.collectAsState()
 
     LaunchedEffect(foundLocation) {
         if (foundLocation != null) {
             VibrateDevice.vibrate(context)
-            Toast.makeText(context, "Now take a selfie!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.scan_prompt_selfie), Toast.LENGTH_SHORT).show()
             onQrScanned(foundLocation!!.id)
         }
     }

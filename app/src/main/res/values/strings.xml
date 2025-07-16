@@ -1,3 +1,163 @@
 <resources>
     <string name="app_name">ClockInGo</string>
+
+    <!-- LoginScreen Strings -->
+    <string name="login_logo_description">App Logo</string>
+    <string name="login_title">ClockInGo</string>
+    <string name="login_username_label">Username</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_loading">Loading…</string>
+    <string name="login_button_text">Login</string>
+    <string name="login_error_empty_both">Username and Password are empty!</string>
+    <string name="login_error_empty_username">Username is empty!</string>
+    <string name="login_error_empty_password">Password is empty!</string>
+    <string name="login_error_invalid_credentials">Invalid Username or Password!</string>
+
+    <!-- HomeScreen Strings -->
+    <string name="home_drawer_home">Home</string>
+    <string name="home_drawer_users">Users</string>
+    <string name="home_drawer_locations">Locations</string>
+    <string name="home_drawer_entries">Entries</string>
+    <string name="home_drawer_exits">Exits</string>
+    <string name="home_drawer_find_existing">Find existing</string>
+    <string name="home_drawer_create_new">Create new</string>
+    <string name="home_drawer_update_existing">Update existing</string>
+    <string name="home_drawer_add_new">Add new</string>
+    <string name="home_drawer_audit_existing">Audit existing</string>
+    <string name="home_app_title">ClockInGo</string>
+    <string name="home_app_menu_description">Menu</string>
+    <string name="home_app_more_description">More</string>
+    <string name="home_app_theme">Theme</string>
+    <string name="home_app_logout">Logout</string>
+    <string name="home_welcome_message">Welcome to ClockInGo</string>
+    <string name="home_checking_entry">Checking for recent entry…</string>
+    <string name="home_already_checked_in">You have already checked in recently!</string>
+    <string name="home_exit_add_coming_soon">Exit\'s - Add new screen coming soon</string>
+    <string name="home_exit_find_coming_soon">Exit\'s - Find existing screen coming soon</string>
+    <string name="home_exit_update_coming_soon">Exit\'s - Update existing screen coming soon</string>
+    <string name="home_exit_audit_coming_soon">Exit\'s - Audit existing screen coming soon</string>
+    <string name="home_unknown_screen">Unknown screen</string>
+
+    <!-- UpdateUsersScreen Strings -->
+    <string name="update_user_title">Update User</string>
+    <string name="update_user_label_name">Name</string>
+    <string name="update_user_label_phone">Phone (Optional)</string>
+    <string name="update_user_label_username">Username</string>
+    <string name="update_user_label_password">Password</string>
+    <string name="update_user_label_role">Role</string>
+    <string name="update_user_label_role_placeholder">Select a Role</string>
+    <string name="update_user_success">User updated successfully!</string>
+    <string name="update_user_failed">Failed to update user.</string>
+    <string name="update_user_fill_required">Please fill in all required fields.</string>
+    <string name="update_user_button">Update User</string>
+
+    <!-- FindUsersScreen Strings -->
+    <string name="find_user_title">Find Users</string>
+    <string name="find_user_search_id">Find by ID</string>
+    <string name="find_user_search_name">Find by Name</string>
+    <string name="find_user_header_id">ID</string>
+    <string name="find_user_header_name">Name</string>
+    <string name="find_user_header_phone">Phone</string>
+    <string name="find_user_header_username">Username</string>
+    <string name="find_user_header_role">Role</string>
+    <string name="find_user_placeholder_phone">--- --- ----</string>
+    <string name="find_user_placeholder_role">Unknown</string>
+
+    <!-- CreateUsersScreen Strings -->
+    <string name="create_user_title">Create New User</string>
+    <string name="create_user_label_name">Name</string>
+    <string name="create_user_label_phone">Phone (Optional)</string>
+    <string name="create_user_label_username">Username</string>
+    <string name="create_user_label_password">Password</string>
+    <string name="create_user_label_role">Role</string>
+    <string name="create_user_label_role_placeholder">Select a Role</string>
+    <string name="create_user_success">User created successfully!</string>
+    <string name="create_user_failed">Failed to create user.</string>
+    <string name="create_user_fill_required">Please fill in all required fields.</string>
+    <string name="create_user_button">Create User</string>
+
+    <!-- UpdateLocationsScreen Strings -->
+    <string name="update_location_title">Update Location</string>
+    <string name="update_location_qr_error">Error generating QR code</string>
+    <string name="update_location_label_address">Address (Optional)</string>
+    <string name="update_location_label_city">City (Optional)</string>
+    <string name="update_location_checkbox_company_office">Is Company Office?</string>
+    <string name="update_location_success">Location updated successfully!</string>
+    <string name="update_location_failed">Failed to update location.</string>
+    <string name="update_location_fill_code">Please fill in the \'Code\' field.</string>
+    <string name="update_location_button">Update Location</string>
+
+    <!-- QRScreen Strings -->
+    <string name="qr_screen_qr_error">Error generating QR code</string>
+
+    <!-- FindLocationsScreen Strings -->
+    <string name="find_location_title">Find Locations</string>
+    <string name="find_location_search_address">Find by Address</string>
+    <string name="find_location_search_city">Find by City</string>
+    <string name="find_location_header_id">ID</string>
+    <string name="find_location_header_address">Address</string>
+    <string name="find_location_header_city">City</string>
+    <string name="find_location_header_company_office">Company Office</string>
+    <string name="find_location_value_yes">Yes</string>
+    <string name="find_location_value_no">No</string>
+    <string name="find_location_value_placeholder">---</string>
+
+    <!-- CreateLocationsScreen Strings -->
+    <string name="create_location_title">Create New Location</string>
+    <string name="create_location_label_address">Address (Optional)</string>
+    <string name="create_location_label_city">City (Optional)</string>
+    <string name="create_location_checkbox_company_office">Is Company Office?</string>
+    <string name="create_location_success">Location created successfully!</string>
+    <string name="create_location_failed">Failed to create location.</string>
+    <string name="create_location_fill_required">Please fill at least Address or City.</string>
+    <string name="create_location_button">Create Location</string>
+
+    <!-- SelfieScreen Strings -->
+    <string name="selfie_camera_permission_needed">The app needs camera permission to take a selfie.</string>
+    <string name="selfie_camera_start_error">Front camera failed to start: %1$s</string>
+    <string name="selfie_button_text">Take Selfie</string>
+    <string name="selfie_entry_success">Entry created successfully!</string>
+    <string name="selfie_entry_save_error">Error saving entry</string>
+    <string name="selfie_capture_error">Error capturing selfie: %1$s</string>
+    <string name="selfie_unknown">Unknown</string>
+
+    <!-- ScanScreen Strings -->
+    <string name="scan_camera_permission_needed">The app needs camera permission to scan QR codes.</string>
+    <string name="scan_qr_error">Error scanning the QR code</string>
+    <string name="scan_camera_start_error">Error starting camera: %1$s</string>
+    <string name="scan_prompt_scan_qr">Please scan the QR code first!</string>
+    <string name="scan_prompt_selfie">Now take a selfie!</string>
+    <string name="scan_unknown">Unknown</string>
+
+    <!-- Common Strings -->
+    <string name="common_back">Back</string>
+
+    <!-- FindEntriesScreen Strings -->
+    <string name="find_entries_title">Find Entries</string>
+    <string name="find_entries_search_user">Find by User Name</string>
+    <string name="find_entries_search_location">Find by Location</string>
+    <string name="find_entries_column_id">ID</string>
+    <string name="find_entries_column_user">User Name</string>
+    <string name="find_entries_column_location">Location</string>
+    <string name="find_entries_column_entry_time">Entry Time</string>
+    <string name="find_entries_no_selfie">No selfie available</string>
+    <string name="find_entries_unknown_user">Unknown User</string>
+    <string name="find_entries_unknown_location">Unknown Location</string>
+
+    <!-- ThemeDialog Strings -->
+    <string name="theme_dialog_title">Choose Theme</string>
+    <string name="theme_dialog_color_theme">Color Theme:</string>
+    <string name="theme_dialog_mode">Theme Mode:</string>
+    <string name="theme_dialog_close">Close</string>
+
+    <!-- ThemeOption Display Strings -->
+    <string name="theme_color_blue">Blue</string>
+    <string name="theme_color_green">Green</string>
+    <string name="theme_color_red">Red</string>
+    <string name="theme_color_yellow">Yellow</string>
+
+    <!-- ThemeMode Display Strings -->
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_mode_system">System</string>
 </resources>

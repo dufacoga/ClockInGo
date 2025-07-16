@@ -27,6 +27,8 @@ import com.example.clockingo.presentation.utils.resizeTo
 import com.example.clockingo.presentation.utils.toByteArray
 import com.example.clockingo.presentation.utils.toBitmap2
 import java.text.SimpleDateFormat
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -60,7 +62,7 @@ fun SelfieScreen(
     }
 
     if (!cameraPermissionState.status.isGranted) {
-        Text("The app needs camera permission to take a selfie.")
+        Text(stringResource(R.string.selfie_camera_permission_needed))
         return
     }
 
@@ -84,7 +86,7 @@ fun SelfieScreen(
             )
             cameraReady = true
         } catch (e: Exception) {
-            onError("Front camera failed to start: ${e.message}")
+            onError(context.getString(R.string.selfie_camera_start_error, e.message ?: R.string.selfie_unknown))
         }
     }
 
@@ -120,7 +122,7 @@ fun SelfieScreen(
                 .padding(16.dp),
             enabled = cameraReady && !hasCaptured
         ) {
-            Text("Take Selfie")
+            Text(stringResource(R.string.selfie_button_text))
         }
     }
 }
@@ -166,11 +168,11 @@ fun takeSelfie(
                 entryViewModel.createEntry(entry) { success ->
                     if (success) {
                         VibrateDevice.vibrate(context)
-                        Toast.makeText(context, "Entry created successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.selfie_entry_success), Toast.LENGTH_SHORT).show()
                         onClearLocation()
                         onQrScanned(currentLocationId)
                     } else {
-                        onError("Error guardando entrada")
+                        onError(context.getString(R.string.selfie_entry_save_error))
                     }
                 }
 
@@ -178,7 +180,7 @@ fun takeSelfie(
             }
 
             override fun onError(exception: ImageCaptureException) {
-                onError("Error capturando selfie: ${exception.message}")
+                onError(context.getString(R.string.selfie_capture_error, exception.message ?: R.string.selfie_unknown))
             }
         }
     )

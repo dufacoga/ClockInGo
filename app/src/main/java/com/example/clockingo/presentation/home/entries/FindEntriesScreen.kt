@@ -1,5 +1,6 @@
 package com.example.clockingo.presentation.home.entries
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import com.example.clockingo.domain.model.User
@@ -22,6 +24,8 @@ import com.example.materialdatatable.MaterialDataTableC
 import com.example.materialdatatable.dataLoaderFromListWithDelay
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun FindEntriesScreen(
@@ -31,6 +35,7 @@ fun FindEntriesScreen(
     forUpdate: Boolean,
     isOnline: Boolean
 ) {
+    val context = LocalContext.current
     val allEntries by entryViewModel.entryList.collectAsState()
     val allUsers by userViewModel.userList.collectAsState()
     val allLocations by locationViewModel.locationList.collectAsState()
@@ -89,7 +94,7 @@ fun FindEntriesScreen(
         verticalArrangement = Arrangement.Center
     ) {
         item {
-            Text("Find Entries", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.find_entries_title), style = MaterialTheme.typography.headlineSmall)
 
             Spacer(Modifier.height(16.dp))
 
@@ -98,13 +103,13 @@ fun FindEntriesScreen(
                     value = searchUserName, onValueChange = {
                         searchUserName = it;
                     },
-                    label = { Text("Find by User Name") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_entries_search_user)) }, modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = searchLocationAddress, onValueChange = {
                         searchLocationAddress = it;
                     },
-                    label = { Text("Find by Location") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_entries_search_location)) }, modifier = Modifier.weight(1f)
                 )
             }
             Spacer(Modifier.height(16.dp))
@@ -118,13 +123,23 @@ fun FindEntriesScreen(
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {
-                        listOf("ID", "User Name", "Location", "Entry Time")
+                        listOf(
+                            stringResource(R.string.find_entries_column_id),
+                            stringResource(R.string.find_entries_column_user),
+                            stringResource(R.string.find_entries_column_location),
+                            stringResource(R.string.find_entries_column_entry_time)
+                        )
                     } else {
-                        listOf("ID", "User Name", "Location", "Entry Time")
+                        listOf(
+                            stringResource(R.string.find_entries_column_id),
+                            stringResource(R.string.find_entries_column_user),
+                            stringResource(R.string.find_entries_column_location),
+                            stringResource(R.string.find_entries_column_entry_time)
+                        )
                     }
                     val paginatedEntriesCount = filteredEntries.size
 
-                    val (entryRowMapper, rowDataToEntryMapper) = getEntryRowMappers(isLandscape, allUsers, allLocations)
+                    val (entryRowMapper, rowDataToEntryMapper) = getEntryRowMappers(context ,isLandscape, allUsers, allLocations)
                     entryDataLoader = dataLoaderFromListWithDelay(
                         sourceProvider = { filteredEntries },
                         rowMapper = entryRowMapper
@@ -139,7 +154,7 @@ fun FindEntriesScreen(
                             val selectedRow = rowDataToEntryMapper(rowData)
                             val entry = allEntries.find { it.id == selectedRow.id }
                             entry?.let {
-                                imageToShow = it.selfie ?: "No selfie available at row: $rowIndex"
+                                imageToShow = it.selfie ?: context.getString(R.string.find_entries_no_selfie)
                                 showPictureScreen = true
                             }
                         },
@@ -161,6 +176,7 @@ fun FindEntriesScreen(
 }
 
 fun getEntryRowMappers(
+    context: Context,
     isLandscape: Boolean,
     users: List<User>,
     locations: List<Location>
@@ -170,7 +186,7 @@ fun getEntryRowMappers(
 
     val entryToRow: (Entry) -> List<String> = if (isLandscape) {
         { entry ->
-            val userName = users.find { it.id == entry.userId }?.name ?: "Unknown User"
+            val userName = users.find { it.id == entry.userId }?.name ?: context.getString(R.string.find_entries_unknown_user)
             val locationDetail = locations.find { it.id == entry.locationId }
             val locationAddress = if (locationDetail != null) {
                 "${locationDetail.address} - ${locationDetail.city}"
@@ -198,7 +214,7 @@ fun getEntryRowMappers(
         }
     } else {
         { entry ->
-            val userName = users.find { it.id == entry.userId }?.name ?: "Unknown User"
+            val userName = users.find { it.id == entry.userId }?.name ?: context.getString(R.string.find_entries_unknown_user)
             val locationDetail = locations.find { it.id == entry.locationId }
             val locationAddress = if (locationDetail != null) {
                 "${locationDetail.address} - ${locationDetail.city}"

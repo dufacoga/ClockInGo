@@ -1,5 +1,6 @@
 package com.example.clockingo.presentation.home.locations
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,12 +11,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.materialdatatable.MaterialDataTableC
 import com.example.materialdatatable.dataLoaderFromListWithDelay
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun FindLocationsScreen(
@@ -72,7 +76,7 @@ fun FindLocationsScreen(
         verticalArrangement = Arrangement.Center
     ) {
         item {
-            Text("Find Locations", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.find_location_title), style = MaterialTheme.typography.headlineSmall)
 
             Spacer(Modifier.height(16.dp))
 
@@ -81,13 +85,13 @@ fun FindLocationsScreen(
                     value = searchAddress, onValueChange = {
                         searchAddress = it
                     },
-                    label = { Text("Find by Address") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_location_search_address)) }, modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = searchCity, onValueChange = {
                         searchCity = it
                     },
-                    label = { Text("Find by City") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_location_search_city)) }, modifier = Modifier.weight(1f)
                 )
             }
             Spacer(Modifier.height(16.dp))
@@ -101,12 +105,21 @@ fun FindLocationsScreen(
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {
-                        listOf("ID", "Address", "City", "Company Office")
+                        listOf(
+                            stringResource(R.string.find_location_header_id),
+                            stringResource(R.string.find_location_header_address),
+                            stringResource(R.string.find_location_header_city),
+                            stringResource(R.string.find_location_header_company_office)
+                        )
                     } else {
-                        listOf("ID", "Address", "City")
+                        listOf(
+                            stringResource(R.string.find_location_header_id),
+                            stringResource(R.string.find_location_header_address),
+                            stringResource(R.string.find_location_header_city)
+                        )
                     }
                     val paginatedLocationsCount = filteredLocations.size
-                    val (locationRowMapper, rowDataToLocationMapper) = getLocationRowMappers(isLandscape)
+                    val (locationRowMapper, rowDataToLocationMapper) = getLocationRowMappers(LocalContext.current, isLandscape)
                     locationDataLoader = dataLoaderFromListWithDelay(
                         sourceProvider = { filteredLocations },
                         rowMapper = locationRowMapper
@@ -146,24 +159,28 @@ fun FindLocationsScreen(
 }
 
 fun getLocationRowMappers(
+    context: Context,
     isLandscape: Boolean
 ): Pair<(Location) -> List<String>, (List<String>) -> Location> {
+    val placeholder = context.getString(R.string.find_location_value_placeholder)
+    val yesLabel = context.getString(R.string.find_location_value_yes)
+    val noLabel = context.getString(R.string.find_location_value_no)
 
     val locationToRow: (Location) -> List<String> = if (isLandscape) {
         { location ->
             listOf(
                 location.id.toString(),
-                location.address ?: "---",
-                location.city ?: "---",
-                if (location.isCompanyOffice) "Yes" else "No"
+                location.address ?: placeholder,
+                location.city ?: placeholder,
+                if (location.isCompanyOffice) yesLabel else noLabel
             )
         }
     } else {
         { location ->
             listOf(
                 location.id.toString(),
-                location.address ?: "---",
-                location.city ?: "---"
+                location.address ?: placeholder,
+                location.city ?: placeholder
             )
         }
     }
@@ -173,10 +190,10 @@ fun getLocationRowMappers(
             Location(
                 id = row.getOrNull(0)?.toIntOrNull() ?: 0,
                 code = row.getOrNull(1) ?: "",
-                address = row.getOrNull(2).takeIf { it != "---" },
-                city = row.getOrNull(3).takeIf { it != "---" },
+                address = row.getOrNull(2).takeIf { it != placeholder },
+                city = row.getOrNull(3).takeIf { it != placeholder },
                 createdBy = 0,
-                isCompanyOffice = row.getOrNull(4) == "Yes"
+                isCompanyOffice = row.getOrNull(4) == yesLabel
             )
         }
     } else {
@@ -184,7 +201,7 @@ fun getLocationRowMappers(
             Location(
                 id = row.getOrNull(0)?.toIntOrNull() ?: 0,
                 code = row.getOrNull(1) ?: "",
-                address = row.getOrNull(2).takeIf { it != "---" },
+                address = row.getOrNull(2).takeIf { it != placeholder },
                 city = null,
                 createdBy = 0,
                 isCompanyOffice = false

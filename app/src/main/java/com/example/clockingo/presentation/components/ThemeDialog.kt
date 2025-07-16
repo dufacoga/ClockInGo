@@ -1,19 +1,15 @@
 package com.example.clockingo.presentation.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.clockingo.ui.theme.ClockInGoThemeOption
 import com.example.clockingo.ui.theme.ThemeMode
+import com.example.clockingo.ui.theme.toDisplayNameRes
 
 @Composable
 fun ShowThemeDialog(
@@ -40,7 +36,7 @@ fun ShowThemeDialog(
                             selected = (option == currentTheme),
                             onClick = { onThemeChange(option) }
                         )
-                        Text(option.name)
+                        Text(text = stringResource(id = option.toDisplayNameRes()))
                     }
                 }
 
@@ -53,7 +49,7 @@ fun ShowThemeDialog(
                             selected = (mode == currentMode),
                             onClick = { onModeChange(mode) }
                         )
-                        Text(mode.name)
+                        Text(text = stringResource(id = mode.toDisplayNameRes()))
                     }
                 }
             }

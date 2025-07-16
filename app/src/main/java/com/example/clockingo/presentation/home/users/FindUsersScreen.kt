@@ -1,5 +1,6 @@
 package com.example.clockingo.presentation.home.users
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import androidx.compose.ui.unit.Dp
@@ -17,6 +19,8 @@ import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.materialdatatable.MaterialDataTableC
 import com.example.materialdatatable.dataLoaderFromListWithDelay
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun FindUsersScreen(
@@ -59,7 +63,7 @@ fun FindUsersScreen(
         verticalArrangement = Arrangement.Center
     ) {
         item {
-            Text("Find Users", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.find_user_title), style = MaterialTheme.typography.headlineSmall)
 
             Spacer(Modifier.height(16.dp))
 
@@ -68,13 +72,13 @@ fun FindUsersScreen(
                     value = searchId, onValueChange = {
                         searchId = it;
                     },
-                    label = { Text("Find by ID") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_user_search_id)) }, modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = searchName, onValueChange = {
                         searchName = it;
                     },
-                    label = { Text("Find by Name") }, modifier = Modifier.weight(1f)
+                    label = { Text(stringResource(R.string.find_user_search_name)) }, modifier = Modifier.weight(1f)
                 )
             }
             Spacer(Modifier.height(16.dp))
@@ -88,16 +92,26 @@ fun FindUsersScreen(
                     isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
                     val headers = if (isLandscape) {
-                        listOf("ID", "Name", "Phone", "Username", "Role")
+                        listOf(
+                            stringResource(R.string.find_user_header_id),
+                            stringResource(R.string.find_user_header_name),
+                            stringResource(R.string.find_user_header_phone),
+                            stringResource(R.string.find_user_header_username),
+                            stringResource(R.string.find_user_header_role)
+                        )
                     } else {
-                        listOf("ID", "Name", "Username")
+                        listOf(
+                            stringResource(R.string.find_user_header_id),
+                            stringResource(R.string.find_user_header_name),
+                            stringResource(R.string.find_user_header_username)
+                        )
                     }
                     val filteredUsers = allUsers.filter {
                         (searchId.isBlank() || it.id.toString().contains(searchId.trim())) &&
                                 (searchName.isBlank() || it.name.contains(searchName.trim(), ignoreCase = true))
                     }
                     val paginatedUsersCount = filteredUsers.size
-                    val (userRowMapper, rowDataToUserMapper) = getUserRowMappers(isLandscape, roles)
+                    val (userRowMapper, rowDataToUserMapper) = getUserRowMappers(LocalContext.current, isLandscape, roles)
                     userDataLoader = dataLoaderFromListWithDelay(
                         sourceProvider = { filteredUsers },
                         rowMapper = userRowMapper
@@ -127,18 +141,21 @@ fun FindUsersScreen(
 }
 
 fun getUserRowMappers(
+    context: Context,
     isLandscape: Boolean,
     roles: List<Role>
 ): Pair<(User) -> List<String>, (List<String>) -> User> {
+    val placeholderPhone = context.getString(R.string.find_user_placeholder_phone)
+    val placeholderRole = context.getString(R.string.find_user_placeholder_role)
 
     val userToRow: (User) -> List<String> = if (isLandscape) {
         { user ->
             listOf(
                 user.id.toString(),
                 user.name,
-                user.phone ?: "--- --- ----",
+                user.phone ?: placeholderPhone,
                 user.username,
-                roles.find { it.id == user.roleId }?.name ?: "Unknown"
+                roles.find { it.id == user.roleId }?.name ?: placeholderRole
             )
         }
     } else {
@@ -156,7 +173,7 @@ fun getUserRowMappers(
             User(
                 id = row.getOrNull(0)?.toIntOrNull() ?: 0,
                 name = row.getOrNull(1) ?: "",
-                phone = row.getOrNull(2).takeIf { it != "--- --- ----" },
+                phone = row.getOrNull(2).takeIf { it != placeholderPhone },
                 username = row.getOrNull(3) ?: "",
                 authToken = "",
                 roleId = roles.find { it.name == row.getOrNull(4) }?.id ?: 0

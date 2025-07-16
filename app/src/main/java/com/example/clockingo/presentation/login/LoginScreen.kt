@@ -10,9 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import com.example.clockingo.R
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 
@@ -36,21 +38,21 @@ fun LoginScreen(
     ) {
         Image(
             painter = painterResource(id = R.drawable.ic_launcher),
-            contentDescription = "App Logo",
+            contentDescription = stringResource(R.string.login_logo_description),
             modifier = Modifier
                 .size(128.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("ClockInGo", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
+        Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurface)
 
         Spacer(modifier = Modifier.height(64.dp))
 
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.login_username_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -60,7 +62,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.login_password_label)) },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
@@ -69,24 +71,24 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         if (isLoading) {
-            Text("Loading...", color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(R.string.login_loading), color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         Button(
             onClick = {
                 if (username.isEmpty() && password.isEmpty()) {
-                    Toast.makeText(context, "Username and Password are empty!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.login_error_empty_both), Toast.LENGTH_SHORT).show()
                 } else if (username.isEmpty()) {
-                    Toast.makeText(context, "Username is empty!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.login_error_empty_username), Toast.LENGTH_SHORT).show()
                 } else if (password.isEmpty()) {
-                    Toast.makeText(context, "Password is empty!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.login_error_empty_password), Toast.LENGTH_SHORT).show()
                 } else {
                     viewModel.getUserByUser(
                         username,
                         password,
                         onFailure = {
-                            Toast.makeText(context, "Invalid Username or Password!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.login_error_invalid_credentials), Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -96,7 +98,7 @@ fun LoginScreen(
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Login", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.login_button_text), fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }

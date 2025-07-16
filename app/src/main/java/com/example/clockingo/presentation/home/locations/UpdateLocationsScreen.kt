@@ -17,6 +17,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.presentation.utils.QRCodeGenerator
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun UpdateLocationsScreen(
@@ -64,7 +66,7 @@ fun UpdateLocationsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Update Location",
+            text = stringResource(R.string.update_location_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -77,14 +79,14 @@ fun UpdateLocationsScreen(
                     setImageBitmap(bitmap)
                 }
             })
-        } ?: Text("Error generating QR code", color = Color.Red)
+        } ?: Text(stringResource(R.string.update_location_qr_error), color = Color.Red)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = address,
             onValueChange = { address = it },
-            label = { Text("Address (Optional)") },
+            label = { Text(stringResource(R.string.update_location_label_address)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -92,7 +94,7 @@ fun UpdateLocationsScreen(
         OutlinedTextField(
             value = city,
             onValueChange = { city = it },
-            label = { Text("City (Optional)") },
+            label = { Text(stringResource(R.string.update_location_label_city)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -106,7 +108,7 @@ fun UpdateLocationsScreen(
                 onCheckedChange = { isCompanyOffice = it }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Is Company Office?")
+            Text(stringResource(R.string.update_location_checkbox_company_office))
         }
 
         Button(
@@ -120,20 +122,20 @@ fun UpdateLocationsScreen(
                     )
                     locationViewModel.updateLocation(updatedLocation) { isSuccess ->
                         if (isSuccess) {
-                            Toast.makeText(context, "Location updated successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.update_location_success), Toast.LENGTH_SHORT).show()
                             onFinish()
                         } else {
-                            Toast.makeText(context, "Failed to update location.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.update_location_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else {
-                    Toast.makeText(context, "Please fill in the 'Code' field.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.update_location_fill_code), Toast.LENGTH_LONG).show()
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(12.dp)
         ) {
-            Text("Update Location")
+            Text(stringResource(R.string.update_location_button))
         }
     }
 }

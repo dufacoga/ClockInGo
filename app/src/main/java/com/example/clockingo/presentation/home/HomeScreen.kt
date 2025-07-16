@@ -42,6 +42,8 @@ import com.example.clockingo.presentation.viewmodel.EntryViewModel
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,44 +61,44 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val menuItems = listOf(
-        DrawerMenuItem(0,"Home"),
+        DrawerMenuItem(0,stringResource(R.string.home_drawer_home)),
         DrawerMenuItem(
             1,
-            "Users",
+            stringResource(R.string.home_drawer_users),
             subItems = listOf(
-                DrawerSubItems(10, "Find existing", true),
-                DrawerSubItems(11, "Create new", true),
-                DrawerSubItems(12, "Update existing", true)
+                DrawerSubItems(10, stringResource(R.string.home_drawer_find_existing), true),
+                DrawerSubItems(11, stringResource(R.string.home_drawer_create_new), true),
+                DrawerSubItems(12, stringResource(R.string.home_drawer_update_existing), true)
             ),
             true
         ),
         DrawerMenuItem(
             2,
-            "Locations",
+            stringResource(R.string.home_drawer_locations),
             subItems = listOf(
-                DrawerSubItems(20, "Find existing", true),
-                DrawerSubItems(21, "Create new", true),
-                DrawerSubItems(22, "Update existing", true)
+                DrawerSubItems(20, stringResource(R.string.home_drawer_find_existing), true),
+                DrawerSubItems(21, stringResource(R.string.home_drawer_create_new), true),
+                DrawerSubItems(22, stringResource(R.string.home_drawer_update_existing), true)
             ),
             true
         ),
         DrawerMenuItem(
             3,
-            "Entries",
+            stringResource(R.string.home_drawer_entries),
             subItems = listOf(
-                DrawerSubItems(30, "Add new", true),
-                DrawerSubItems(31, "Find existing", true)
+                DrawerSubItems(30, stringResource(R.string.home_drawer_add_new), true),
+                DrawerSubItems(31, stringResource(R.string.home_drawer_find_existing), true)
             ),
             true
         ),
         DrawerMenuItem(
             4,
-            "Exits",
+            stringResource(R.string.home_drawer_exits),
             subItems = listOf(
-                DrawerSubItems(40, "Add new", true),
-                DrawerSubItems(41, "Find existing", true),
-                DrawerSubItems(42, "Update existing", true),
-                DrawerSubItems(43, "Audit existing", true)
+                DrawerSubItems(40, stringResource(R.string.home_drawer_add_new), true),
+                DrawerSubItems(41, stringResource(R.string.home_drawer_find_existing), true),
+                DrawerSubItems(42, stringResource(R.string.home_drawer_update_existing), true),
+                DrawerSubItems(43, stringResource(R.string.home_drawer_audit_existing), true)
             ),
             true
         )
@@ -284,19 +286,19 @@ fun HomeScreen(
             containerColor = MaterialTheme.colorScheme.surface,
             topBar = {
                 TopAppBar(
-                    title = { Text("ClockInGo", color = MaterialTheme.colorScheme.onPrimary) },
+                    title = { Text(stringResource(R.string.home_app_title), color = MaterialTheme.colorScheme.onPrimary) },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onPrimary)
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.home_app_menu_description), tint = MaterialTheme.colorScheme.onPrimary)
                         }
                     },
                     actions = {
                         Box {
                             IconButton(onClick = { showDropdownMenu = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.onPrimary)
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.home_app_more_description), tint = MaterialTheme.colorScheme.onPrimary)
                             }
                             DropdownMenu(
                                 expanded = showDropdownMenu,
@@ -308,7 +310,7 @@ fun HomeScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("Theme")
+                                            Text(stringResource(R.string.home_app_theme))
                                         }
                                     },
                                     onClick = {
@@ -322,7 +324,7 @@ fun HomeScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("Logout")
+                                            Text(stringResource(R.string.home_app_logout))
                                         }
                                     },
                                     onClick = {
@@ -343,7 +345,7 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Add")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.home_drawer_add_new))
                     }
                 }
             }
@@ -370,7 +372,7 @@ fun HomeScreen(
                             .padding(padding),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Welcome to ClockInGo", color = MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(R.string.home_welcome_message), color = MaterialTheme.colorScheme.onSurface)
                     }
                     10 -> FindUsersScreen(
                             userViewModel = userViewModel,
@@ -413,7 +415,7 @@ fun HomeScreen(
                             }
                         )
                     }
-                    21 -> CreateLocationsScreen(locationViewModel = locationViewModel, currentUserId = currentLoggedInUserId) // Pass the current user ID
+                    21 -> CreateLocationsScreen(locationViewModel = locationViewModel, currentUserId = currentLoggedInUserId)
                     22 -> if (selectedLocation == null) {
                         FindLocationsScreen(
                             locationViewModel = locationViewModel,
@@ -433,10 +435,10 @@ fun HomeScreen(
                     }
                     30 -> {
                         when (allowScan) {
-                            null -> Text("Checking for recent entry...")
+                            null -> Text(stringResource(R.string.home_checking_entry))
 
                             false -> {
-                                Toast.makeText(currentContext, "You have already checked in recently!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(currentContext, stringResource(R.string.home_already_checked_in), Toast.LENGTH_LONG).show()
                                 allowScan = null
                                 VibrateDevice.vibrate(currentContext)
                                 selectedMenu = 0
@@ -486,11 +488,11 @@ fun HomeScreen(
                         forUpdate = false,
                         isOnline = isOnline
                     )
-                    40 -> Text("Exit's - Add new screen coming soon")
-                    41 -> Text("Exit's - Find existing screen coming soon")
-                    42 -> Text("Exit's - Update existing screen coming soon")
-                    43 -> Text("Exit's - Audit existing screen coming soon")
-                    else -> Text("Unknown screen")
+                    40 -> Text(stringResource(R.string.home_exit_add_coming_soon))
+                    41 -> Text(stringResource(R.string.home_exit_find_coming_soon))
+                    42 -> Text(stringResource(R.string.home_exit_update_coming_soon))
+                    43 -> Text(stringResource(R.string.home_exit_audit_coming_soon))
+                    else -> Text(stringResource(R.string.home_unknown_screen))
                 }
 
                 if (showThemeDialog) {

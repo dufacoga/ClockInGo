@@ -16,6 +16,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import com.example.clockingo.presentation.utils.toBase16
 import com.example.clockingo.presentation.utils.toBase64
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @Composable
 fun CreateLocationsScreen(
@@ -37,7 +39,7 @@ fun CreateLocationsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Create New Location",
+            text = stringResource(R.string.create_location_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -47,7 +49,7 @@ fun CreateLocationsScreen(
         OutlinedTextField(
             value = address,
             onValueChange = { address = it },
-            label = { Text("Address (Optional)") },
+            label = { Text(stringResource(R.string.create_location_label_address)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -57,7 +59,7 @@ fun CreateLocationsScreen(
         OutlinedTextField(
             value = city,
             onValueChange = { city = it },
-            label = { Text("City (Optional)") },
+            label = { Text(stringResource(R.string.create_location_label_city)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -73,7 +75,7 @@ fun CreateLocationsScreen(
                 onCheckedChange = { isCompanyOffice = it }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Is Company Office?")
+            Text(stringResource(R.string.create_location_checkbox_company_office))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -97,22 +99,22 @@ fun CreateLocationsScreen(
 
                     locationViewModel.createLocation(newLocation) { isSuccess ->
                         if (isSuccess) {
-                            Toast.makeText(context, "Location created successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.create_location_success), Toast.LENGTH_SHORT).show()
                             address = ""
                             city = ""
                             isCompanyOffice = false
                         } else {
-                            Toast.makeText(context, "Failed to create location.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.create_location_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else {
-                    Toast.makeText(context, "Please fill at least Address or City.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.create_location_fill_required), Toast.LENGTH_LONG).show()
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(12.dp)
         ) {
-            Text("Create Location")
+            Text(stringResource(R.string.create_location_button))
         }
     }
 }

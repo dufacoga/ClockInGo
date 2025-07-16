@@ -15,6 +15,8 @@ import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.clockingo.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +49,7 @@ fun CreateUsersScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Create New User",
+            text = stringResource(R.string.create_user_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -57,7 +59,7 @@ fun CreateUsersScreen(
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.create_user_label_name)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -67,7 +69,7 @@ fun CreateUsersScreen(
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
-            label = { Text("Phone (Optional)") },
+            label = { Text(stringResource(R.string.create_user_label_phone)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Phone)
@@ -78,7 +80,7 @@ fun CreateUsersScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.create_user_label_username)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -88,7 +90,7 @@ fun CreateUsersScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.create_user_label_password)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -102,9 +104,9 @@ fun CreateUsersScreen(
         ) {
             OutlinedTextField(
                 readOnly = true,
-                value = roleList.find { it.id == selectedRoleId }?.name ?: "Select a Role",
+                value = roleList.find { it.id == selectedRoleId }?.name ?: stringResource(R.string.create_user_label_role_placeholder),
                 onValueChange = {},
-                label = { Text("Role") },
+                label = { Text(stringResource(R.string.create_user_label_role)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
@@ -140,24 +142,24 @@ fun CreateUsersScreen(
                     )
                     userViewModel.createUser(newUser) { isSuccess ->
                         if (isSuccess) {
-                            Toast.makeText(context, "User created successfully!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.create_user_success), Toast.LENGTH_SHORT).show()
                             name = ""
                             phone = ""
                             username = ""
                             password = ""
                             selectedRoleId = null
                         } else {
-                            Toast.makeText(context, "Failed to create user.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.create_user_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else {
-                    Toast.makeText(context, "Please fill in all required fields.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.create_user_fill_required), Toast.LENGTH_LONG).show()
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(12.dp)
         ) {
-            Text("Create User")
+            Text(stringResource(R.string.create_user_button))
         }
     }
 }
