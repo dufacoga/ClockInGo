@@ -29,6 +29,7 @@
     <string name="home_app_more_description">More</string>
     <string name="home_app_theme">Theme</string>
     <string name="home_app_logout">Logout</string>
+    <string name="home_welcome_title">Hi</string>
     <string name="home_welcome_message">Welcome to ClockInGo</string>
     <string name="home_checking_entry">Checking for recent entry…</string>
     <string name="home_already_checked_in">You have already checked in recently!</string>

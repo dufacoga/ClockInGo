@@ -9,7 +9,9 @@ fun LocationDto.toDomain(): Location = Location(
     address = Address,
     city = City,
     createdBy = CreatedBy,
-    isCompanyOffice = IsCompanyOffice
+//    Code tested for MySQL
+//    isCompanyOffice = IsCompanyOffice
+    isCompanyOffice = IsCompanyOffice == 1
 )
 
 fun Location.toDto(): LocationDto = LocationDto(
@@ -18,5 +20,7 @@ fun Location.toDto(): LocationDto = LocationDto(
     Address = address,
     City = city,
     CreatedBy = createdBy,
-    IsCompanyOffice = isCompanyOffice
+//    Code tested for MySQL
+//    isCompanyOffice = IsCompanyOffice
+    IsCompanyOffice = if (isCompanyOffice) 1 else 0
 )

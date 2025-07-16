@@ -9,5 +9,17 @@ data class LocationDto(
     val Address: String? = null,
     val City: String? = null,
     val CreatedBy: Int,
-    val IsCompanyOffice: Boolean = false
+    val IsCompanyOffice: Int
 )
+
+
+//      Code tested for MySQL
+//      @Serializable
+//      data class LocationDto(
+//          val Id: Int,
+//          val Code: String,
+//          val Address: String? = null,
+//          val City: String? = null,
+//          val CreatedBy: Int,
+//          val IsCompanyOffice: Boolean
+//      )

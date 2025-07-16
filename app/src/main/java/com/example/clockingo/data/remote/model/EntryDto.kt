@@ -10,6 +10,19 @@ data class EntryDto(
     val EntryTime: String,
     val Selfie: String? = null,
     val UpdatedAt: String? = null,
-    val IsSynced: Boolean = false,
+    val IsSynced: Int,
     val DeviceId: String? = null
 )
+
+//Code tested for MySQL
+//@Serializable
+//data class EntryDto(
+//    val Id: Int,
+//    val UserId: Int,
+//    val LocationId: Int,
+//    val EntryTime: String,
+//    val Selfie: String? = null,
+//    val UpdatedAt: String? = null,
+//    val IsSynced: Boolean,
+//    val DeviceId: String? = null
+//)

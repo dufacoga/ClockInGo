@@ -10,10 +10,16 @@ fun ExitDto.toDomain(): Exit = Exit(
     exitTime = ExitTime,
     entryId = EntryId,
     result = Result,
-    irregularBehavior = IrregularBehavior,
-    reviewedByAdmin = ReviewedByAdmin,
+    irregularBehavior = IrregularBehavior == 1,
+//    Code tested for MySQL
+//    irregularBehavior = IrregularBehavior,
+    reviewedByAdmin = ReviewedByAdmin == 1,
+//    Code tested for MySQL
+//    reviewedByAdmin = ReviewedByAdmin,
     updatedAt = UpdatedAt,
-    isSynced = IsSynced,
+    isSynced = IsSynced == 1,
+//    Code tested for MySQL
+//    isSynced = IsSynced,
     deviceId = DeviceId
 )
 
@@ -24,9 +30,15 @@ fun Exit.toDto(): ExitDto = ExitDto(
     ExitTime = exitTime,
     EntryId = entryId,
     Result = result,
-    IrregularBehavior = irregularBehavior,
-    ReviewedByAdmin = reviewedByAdmin,
+    IrregularBehavior = if (irregularBehavior) 1 else 0,
+//    Code tested for MySQL
+//    IrregularBehavior = irregularBehavior,
+    ReviewedByAdmin = if (reviewedByAdmin) 1 else 0,
+//    Code tested for MySQL
+//    ReviewedByAdmin = reviewedByAdmin,
     UpdatedAt = updatedAt,
-    IsSynced = isSynced,
+    IsSynced = if (isSynced) 1 else 0,
+//    Code tested for MySQL
+//    IsSynced = isSynced,
     DeviceId = deviceId
 )

@@ -13,8 +13,12 @@ class GetUserByIdUseCase(private val repository: IUserRepository) {
 }
 
 class GetUserByUserUseCase(private val repository: IUserRepository) {
-    suspend operator fun invoke(username: String, password: String): Boolean =
-        repository.getUserByUser(username, password)
+    var loggedInUser: User? = null
+    suspend operator fun invoke(username: String, password: String): Boolean {
+        val response = repository.getUserByUser(username, password)
+        loggedInUser = response
+        return response != null
+    }
 }
 
 class CreateUserUseCase(private val repository: IUserRepository) {

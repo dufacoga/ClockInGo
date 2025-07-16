@@ -33,7 +33,7 @@ fun FindEntriesScreen(
     userViewModel: UserViewModel,
     locationViewModel: LocationViewModel,
     forUpdate: Boolean,
-    isOnline: Boolean
+    currentUser: User
 ) {
     val context = LocalContext.current
     val allEntries by entryViewModel.entryList.collectAsState()
@@ -74,15 +74,19 @@ fun FindEntriesScreen(
 
     var searchUserName by remember { mutableStateOf("") }
     var searchLocationAddress by remember { mutableStateOf("") }
-    val filteredEntries by remember(allEntries, allUsers, allLocations, searchUserName, searchLocationAddress) {
+    val filteredEntries by remember(allEntries, allUsers, allLocations, searchUserName, searchLocationAddress, currentUser) {
         derivedStateOf {
-            allEntries.filter { entry ->
-                val user = allUsers.find { it.id == entry.userId }
-                val location = allLocations.find { it.id == entry.locationId }
+            allEntries
+                .filter { entry ->
+                    currentUser.roleId != 2 || entry.userId == currentUser.id
+                }
+                .filter { entry ->
+                    val user = allUsers.find { it.id == entry.userId }
+                    val location = allLocations.find { it.id == entry.locationId }
 
-                (searchUserName.isBlank() || user?.name?.contains(searchUserName.trim(), ignoreCase = true) == true) &&
-                        (searchLocationAddress.isBlank() || "${location?.address}, ${location?.city}".contains(searchLocationAddress.trim(), ignoreCase = true))
-            }
+                    (searchUserName.isBlank() || user?.name?.contains(searchUserName.trim(), ignoreCase = true) == true) &&
+                            (searchLocationAddress.isBlank() || "${location?.address}, ${location?.city}".contains(searchLocationAddress.trim(), ignoreCase = true))
+                }
         }
     }
 
@@ -96,22 +100,25 @@ fun FindEntriesScreen(
         item {
             Text(stringResource(R.string.find_entries_title), style = MaterialTheme.typography.headlineSmall)
 
-            Spacer(Modifier.height(16.dp))
+            if (currentUser.roleId == 1) {
+                Spacer(Modifier.height(16.dp))
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = searchUserName, onValueChange = {
-                        searchUserName = it;
-                    },
-                    label = { Text(stringResource(R.string.find_entries_search_user)) }, modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = searchLocationAddress, onValueChange = {
-                        searchLocationAddress = it;
-                    },
-                    label = { Text(stringResource(R.string.find_entries_search_location)) }, modifier = Modifier.weight(1f)
-                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    OutlinedTextField(
+                        value = searchUserName, onValueChange = {
+                            searchUserName = it;
+                        },
+                        label = { Text(stringResource(R.string.find_entries_search_user)) }, modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = searchLocationAddress, onValueChange = {
+                            searchLocationAddress = it;
+                        },
+                        label = { Text(stringResource(R.string.find_entries_search_location)) }, modifier = Modifier.weight(1f)
+                    )
+                }
             }
+
             Spacer(Modifier.height(16.dp))
 
             Box(

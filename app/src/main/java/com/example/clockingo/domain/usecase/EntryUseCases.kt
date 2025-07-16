@@ -25,7 +25,9 @@ class HasRecentEntryUseCase(private val repository: IEntryRepository, private va
         val thresholdMillis = System.currentTimeMillis() - windowMinutes * 60_000L
         val threshold = Date(thresholdMillis)
 
-        val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+//      Code tested for MySQL
+//      val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val validEntries = entries.filterNotNull()
 
         return validEntries.any { entry ->

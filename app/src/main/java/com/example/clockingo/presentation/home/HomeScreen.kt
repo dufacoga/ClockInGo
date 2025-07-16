@@ -43,6 +43,7 @@ import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.clockingo.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,49 +61,6 @@ fun HomeScreen(
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val menuItems = listOf(
-        DrawerMenuItem(0,stringResource(R.string.home_drawer_home)),
-        DrawerMenuItem(
-            1,
-            stringResource(R.string.home_drawer_users),
-            subItems = listOf(
-                DrawerSubItems(10, stringResource(R.string.home_drawer_find_existing), true),
-                DrawerSubItems(11, stringResource(R.string.home_drawer_create_new), true),
-                DrawerSubItems(12, stringResource(R.string.home_drawer_update_existing), true)
-            ),
-            true
-        ),
-        DrawerMenuItem(
-            2,
-            stringResource(R.string.home_drawer_locations),
-            subItems = listOf(
-                DrawerSubItems(20, stringResource(R.string.home_drawer_find_existing), true),
-                DrawerSubItems(21, stringResource(R.string.home_drawer_create_new), true),
-                DrawerSubItems(22, stringResource(R.string.home_drawer_update_existing), true)
-            ),
-            true
-        ),
-        DrawerMenuItem(
-            3,
-            stringResource(R.string.home_drawer_entries),
-            subItems = listOf(
-                DrawerSubItems(30, stringResource(R.string.home_drawer_add_new), true),
-                DrawerSubItems(31, stringResource(R.string.home_drawer_find_existing), true)
-            ),
-            true
-        ),
-        DrawerMenuItem(
-            4,
-            stringResource(R.string.home_drawer_exits),
-            subItems = listOf(
-                DrawerSubItems(40, stringResource(R.string.home_drawer_add_new), true),
-                DrawerSubItems(41, stringResource(R.string.home_drawer_find_existing), true),
-                DrawerSubItems(42, stringResource(R.string.home_drawer_update_existing), true),
-                DrawerSubItems(43, stringResource(R.string.home_drawer_audit_existing), true)
-            ),
-            true
-        )
-    )
 
     val userSaver: Saver<User?, Any> = mapSaver(
         save = { user ->
@@ -206,6 +164,81 @@ fun HomeScreen(
 
     LaunchedEffect(currentUser) {
         selectedUser = currentUser
+    }
+
+    if (currentUser == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    var menuItems = listOf<DrawerMenuItem>()
+    when (currentUser?.roleId) {
+        1 -> {
+            menuItems = listOf(
+                DrawerMenuItem(0,stringResource(R.string.home_drawer_home)),
+                DrawerMenuItem(
+                    1,
+                    stringResource(R.string.home_drawer_users),
+                    subItems = listOf(
+                        DrawerSubItems(10, stringResource(R.string.home_drawer_find_existing), true),
+                        DrawerSubItems(11, stringResource(R.string.home_drawer_create_new), true),
+                        DrawerSubItems(12, stringResource(R.string.home_drawer_update_existing), true)
+                    ),
+                    true
+                ),
+                DrawerMenuItem(
+                    2,
+                    stringResource(R.string.home_drawer_locations),
+                    subItems = listOf(
+                        DrawerSubItems(20, stringResource(R.string.home_drawer_find_existing), true),
+                        DrawerSubItems(21, stringResource(R.string.home_drawer_create_new), true),
+                        DrawerSubItems(22, stringResource(R.string.home_drawer_update_existing), true)
+                    ),
+                    true
+                ),
+                DrawerMenuItem(
+                    3,
+                    stringResource(R.string.home_drawer_entries),
+                    subItems = listOf(
+                        DrawerSubItems(30, stringResource(R.string.home_drawer_add_new), true),
+                        DrawerSubItems(31, stringResource(R.string.home_drawer_find_existing), true)
+                    ),
+                    true
+                ),
+                DrawerMenuItem(
+                    4,
+                    stringResource(R.string.home_drawer_exits),
+                    subItems = listOf(
+                        DrawerSubItems(40, stringResource(R.string.home_drawer_add_new), true),
+                        DrawerSubItems(41, stringResource(R.string.home_drawer_find_existing), true),
+                        DrawerSubItems(42, stringResource(R.string.home_drawer_update_existing), true),
+                        DrawerSubItems(43, stringResource(R.string.home_drawer_audit_existing), true)
+                    ),
+                    true
+                )
+            )
+        }
+        2 -> {
+            menuItems = listOf(
+                DrawerMenuItem(0,stringResource(R.string.home_drawer_home)),
+                DrawerMenuItem(
+                    3,
+                    stringResource(R.string.home_drawer_entries),
+                    subItems = listOf(
+                        DrawerSubItems(30, stringResource(R.string.home_drawer_add_new), true),
+                        DrawerSubItems(31, stringResource(R.string.home_drawer_find_existing), true)
+                    ),
+                    true
+                )
+            )
+        }
+        else -> {
+            menuItems = listOf(
+                DrawerMenuItem(0,stringResource(R.string.home_drawer_home))
+            )
+        }
     }
 
     val currentLocation by locationViewModel.currentLocation.collectAsState()
@@ -372,7 +405,20 @@ fun HomeScreen(
                             .padding(padding),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(R.string.home_welcome_message), color = MaterialTheme.colorScheme.onSurface)
+                        val greeting = stringResource(R.string.home_welcome_title)
+                        val currentUserName = currentUser?.name ?: ""
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "$greeting $currentUserName",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.home_welcome_message),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                     10 -> FindUsersScreen(
                             userViewModel = userViewModel,
@@ -486,7 +532,7 @@ fun HomeScreen(
                         userViewModel = userViewModel,
                         locationViewModel = locationViewModel,
                         forUpdate = false,
-                        isOnline = isOnline
+                        currentUser = currentUser!!
                     )
                     40 -> Text(stringResource(R.string.home_exit_add_coming_soon))
                     41 -> Text(stringResource(R.string.home_exit_find_coming_soon))

@@ -62,9 +62,14 @@ class UserViewModel(
 
     fun checkIfUserIsLoggedIn() {
         viewModelScope.launch {
-            sessionManager.isLoggedIn.collect {
-                saved ->
+            sessionManager.isLoggedIn.collect { saved ->
                 _loggedIn.value = saved
+                if (saved) {
+                    val user = sessionManager.getLoggedInUser()
+                    if (user != null) {
+                        _currentUser.value = user
+                    }
+                }
             }
         }
     }
@@ -98,6 +103,11 @@ class UserViewModel(
             _isLoading.value = false
 
             if (result == true) {
+                val user = getUserByUserUseCase.loggedInUser
+                if (user != null) {
+                    sessionManager.saveLoggedInUser(user)
+                    _currentUser.value = user
+                }
                 saveLoginState(true)
                 _loggedIn.value = true
             } else {

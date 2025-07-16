@@ -146,13 +146,18 @@ fun takeSelfie(
                 val resized = bitmap.resizeTo(512)
                 val byteArray = resized.toByteArray(12)
                 var base64: String? = null
+//                    Code tested for MySQL
+//                    base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
                 if (isOnline) {
-                    base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                    val firstBase64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                    base64 = Base64.encodeToString(firstBase64.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
                 } else {
                     val firstBase64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
                     base64 = Base64.encodeToString(firstBase64.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
                 }
-                val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+//                    Code tested for MySQL
+//                    val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
+                val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
                 val entry = Entry(
                     id = 0,

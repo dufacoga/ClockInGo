@@ -10,9 +10,25 @@ data class ExitDto(
     val ExitTime: String,
     val EntryId: Int,
     val Result: String? = null,
-    val IrregularBehavior: Boolean = false,
-    val ReviewedByAdmin: Boolean = false,
+    val IrregularBehavior: Int,
+    val ReviewedByAdmin: Int,
     val UpdatedAt: String? = null,
-    val IsSynced: Boolean = false,
+    val IsSynced: Int,
     val DeviceId: String? = null
 )
+
+//Code tested for MySQL
+//@Serializable
+//data class ExitDto(
+//    val Id: Int,
+//    val UserId: Int,
+//    val LocationId: Int,
+//    val ExitTime: String,
+//    val EntryId: Int,
+//    val Result: String? = null,
+//    val IrregularBehavior: Boolean,
+//    val ReviewedByAdmin: Boolean,
+//    val UpdatedAt: String? = null,
+//    val IsSynced: Boolean,
+//    val DeviceId: String? = null
+//)

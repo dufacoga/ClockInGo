@@ -75,7 +75,7 @@ class UserRepository(
         }
     }
 
-    override suspend fun getUserByUser(username: String, password: String): Boolean {
+    override suspend fun getUserByUser(username: String, password: String): User? {
         return try {
             if (connectivityObserver.currentStatus()) {
                 val dto = SelectDto(
@@ -86,19 +86,30 @@ class UserRepository(
                 if (response.isSuccessful && response.body()?.isNotEmpty() == true) {
                     val usersDto = response.body() ?: emptyList()
                     val user = usersDto.first().DtoToDomain()
-                    dao.insert(user.toEntity())
-                    return user.authToken == password
+                    if (user.authToken == password) {
+                        dao.insert(user.toEntity())
+                        return user
+                    }
+                    return null
                 }
-                false
+                null
             } else {
                 Log.i("UserRepository", "No internet, attempting offline authentication for $username.")
                 val localUser = dao.getUserByUsername(username)
-                return localUser != null && localUser.authToken == password
+                return if (localUser != null && localUser.authToken == password) {
+                    localUser.toDomain()
+                } else {
+                    null
+                }
             }
         } catch (e: Exception) {
             Log.e("UserRepository", "Exception in getUserByUser (authentication), attempting local fallback", e)
             val localUser = dao.getUserByUsername(username)
-            return localUser != null && localUser.authToken == password
+            return if (localUser != null && localUser.authToken == password) {
+                localUser.toDomain()
+            } else {
+                null
+            }
         }
     }
 

@@ -95,7 +95,7 @@ fun UpdateUsersScreen(
         OutlinedTextField(
             value = phone,
             onValueChange = { phone = it },
-            label = { Text("stringResource(R.string.update_user_label_phone)") },
+            label = { Text(stringResource(R.string.update_user_label_phone)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)

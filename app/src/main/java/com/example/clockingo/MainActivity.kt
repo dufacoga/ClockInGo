@@ -4,12 +4,17 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import com.example.clockingo.presentation.login.LoginScreen
 import com.example.clockingo.presentation.home.HomeScreen
 import com.example.clockingo.ui.theme.ClockInGoThemeOption
 import com.example.clockingo.ui.theme.ClockInGoThemeWrapper
 import com.example.clockingo.ui.theme.ThemeMode
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.room.Room.databaseBuilder
 import com.example.clockingo.data.local.SessionManager
 import com.example.clockingo.data.local.ThemePreferenceManager
@@ -85,6 +90,7 @@ class MainActivity : ComponentActivity() {
             val selectedTheme by themePrefs.selectedTheme.collectAsState(initial = ClockInGoThemeOption.Green)
             val selectedThemeMode by themePrefs.selectedMode.collectAsState(initial = ThemeMode.System)
             val coroutineScope = rememberCoroutineScope()
+            val currentUser by userViewModel.currentUser.collectAsState()
 
             LaunchedEffect(Unit) {
                 try {
@@ -99,30 +105,38 @@ class MainActivity : ComponentActivity() {
                 selectedTheme = selectedTheme,
                 themeMode = selectedThemeMode
             ) {
-                when (isLoggedIn) {
-                    true -> HomeScreen(
-                        onThemeChange = { newTheme ->
-                            coroutineScope.launch {
-                                themePrefs.saveTheme(newTheme)
-                            }
-                        },
-                        onModeChange = { newMode ->
-                            coroutineScope.launch {
-                                themePrefs.saveMode(newMode)
-                            }
-                        },
-                        selectedTheme = selectedTheme,
-                        selectedMode = selectedThemeMode,
-                        userViewModel = userViewModel,
-                        roleViewModel = roleViewModel,
-                        locationViewModel = locationViewModel,
-                        entryViewModel = entryViewModel,
-                        isOnline = isOnline
-                    )
+                when {
+                    isLoggedIn == true && currentUser != null -> {
+                        HomeScreen(
+                            onThemeChange = { newTheme ->
+                                coroutineScope.launch {
+                                    themePrefs.saveTheme(newTheme)
+                                }
+                            },
+                            onModeChange = { newMode ->
+                                coroutineScope.launch {
+                                    themePrefs.saveMode(newMode)
+                                }
+                            },
+                            selectedTheme = selectedTheme,
+                            selectedMode = selectedThemeMode,
+                            userViewModel = userViewModel,
+                            roleViewModel = roleViewModel,
+                            locationViewModel = locationViewModel,
+                            entryViewModel = entryViewModel,
+                            isOnline = isOnline
+                        )
+                    }
 
-                    false -> LoginScreen(viewModel = userViewModel)
+                    isLoggedIn == false -> {
+                        LoginScreen(viewModel = userViewModel)
+                    }
 
-                    null -> {}
+                    else -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
             }
         }

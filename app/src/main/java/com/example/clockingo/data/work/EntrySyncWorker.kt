@@ -23,10 +23,12 @@ class EntrySyncWorker(
             try {
                 val entry = entity.toDomain()
                 val cleanedSelfie = try {
-                    val innerBase64 = String(
-                        android.util.Base64.decode(entry.selfie ?: "", android.util.Base64.NO_WRAP),
-                        Charsets.UTF_8
-                    )
+//                    Code tested for MySQL
+//                    val innerBase64 = String(
+//                        android.util.Base64.decode(entry.selfie ?: "", android.util.Base64.NO_WRAP),
+//                        Charsets.UTF_8
+//                    )
+                    val innerBase64 = entry.selfie ?: ""
                     innerBase64
                 } catch (e: Exception) {
                     entry.selfie ?: ""

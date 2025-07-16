@@ -10,7 +10,9 @@ fun EntryDto.toDomain(): Entry = Entry(
     entryTime = EntryTime,
     selfie = Selfie,
     updatedAt = UpdatedAt,
-    isSynced = IsSynced,
+//    Code tested for MySQL
+//    IsSynced = isSynced,
+    isSynced = IsSynced == 1,
     deviceId = DeviceId
 )
 
@@ -21,6 +23,8 @@ fun Entry.toDto(): EntryDto = EntryDto(
     EntryTime = entryTime,
     Selfie = selfie,
     UpdatedAt = updatedAt,
-    IsSynced = isSynced,
+//    Code tested for MySQL
+//    IsSynced = isSynced,
+    IsSynced = if (isSynced) 1 else 0,
     DeviceId = deviceId
 )
