@@ -30,11 +30,18 @@ class EntryRepository(
                 val dto = SelectDto(table = "Entries")
                 val apiResponse = api.select(dto)
                 if (apiResponse.isSuccessful) {
-                    val entriesDto = apiResponse.body() ?: emptyList()
-                    val entries = entriesDto.map { it.DtoToDomain() }
-                    dao.deleteAllEntries()
-                    entries.forEach { dao.insert(it.copy(isSynced = true).toEntity()) }
-                    Response.success(entries)
+                    val remoteEntries = apiResponse.body()?.map { it.DtoToDomain() } ?: emptyList()
+                    val localEntries = dao.getAllEntries().map { it.toDomain() }
+                    val localEntryMap = localEntries.associateBy { it.id }
+                    for (remoteEntry in remoteEntries) {
+                        val existingLocal = localEntryMap[remoteEntry.id]
+                        if (existingLocal != null) {
+                            dao.insert(remoteEntry.copy(isSynced = true).toEntity())
+                        } else {
+                            dao.insert(remoteEntry.copy(isSynced = true).toEntity())
+                        }
+                    }
+                    Response.success(dao.getAllEntries().map { it.toDomain() })
                 } else {
                     Log.w("EntryRepository", "API failed for getAllEntries (${apiResponse.code()}), loading from local DB.")
                     Response.success(dao.getAllEntries().map { it.toDomain() })
@@ -61,7 +68,7 @@ class EntryRepository(
                 if (apiResponse.isSuccessful) {
                     val entryDto = apiResponse.body()?.firstOrNull()
                     val entry = entryDto?.DtoToDomain()
-                    entry?.let { dao.insert(it.copy(isSynced = true).toEntity()) } // Update specific item in cache, mark as synced
+                    entry?.let { dao.insert(it.copy(isSynced = true).toEntity()) }
                     Response.success(entry)
                 } else {
                     Log.w("EntryRepository", "API failed for getEntryById (${apiResponse.code()}), loading from local DB.")

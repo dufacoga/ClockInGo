@@ -36,7 +36,8 @@ fun SelfieScreen(
     currentLocationId: Int,
     onQrScanned: (Int) -> Unit,
     onClearLocation: () -> Unit,
-    onError: (String) -> Unit
+    onError: (String) -> Unit,
+    isOnline: Boolean
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -109,7 +110,8 @@ fun SelfieScreen(
                             onQrScanned(it)
                         },
                         onClearLocation = onClearLocation,
-                        onError = onError
+                        onError = onError,
+                        isOnline = isOnline
                     )
                 }
             },
@@ -131,7 +133,8 @@ fun takeSelfie(
     entryViewModel: EntryViewModel,
     onQrScanned: (Int) -> Unit,
     onClearLocation: () -> Unit,
-    onError: (String) -> Unit
+    onError: (String) -> Unit,
+    isOnline: Boolean
 ) {
     imageCapture.takePicture(
         ContextCompat.getMainExecutor(context),
@@ -139,8 +142,14 @@ fun takeSelfie(
             override fun onCaptureSuccess(imageProxy: ImageProxy) {
                 val bitmap = imageProxy.toBitmap2()
                 val resized = bitmap.resizeTo(512)
-                val byteArray = resized.toByteArray(16)
-                val base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                val byteArray = resized.toByteArray(12)
+                var base64: String? = null
+                if (isOnline) {
+                    base64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                } else {
+                    val firstBase64 = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+                    base64 = Base64.encodeToString(firstBase64.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+                }
                 val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(Date())
 
                 val entry = Entry(

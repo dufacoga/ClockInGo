@@ -1,6 +1,7 @@
 package com.example.clockingo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.clockingo.presentation.login.LoginScreen
@@ -38,6 +39,14 @@ class MainActivity : ComponentActivity() {
             "clockingo.db"
         ).build()
 
+        val roleRepository = RoleRepository(database.roleDao(), connectivityObserver)
+        val roleViewModel = RoleViewModel(
+            GetAllRolesUseCase(roleRepository),
+            GetRoleByIdUseCase(roleRepository),
+            CreateRoleUseCase(roleRepository),
+            UpdateRoleUseCase(roleRepository),
+            DeleteRoleUseCase(roleRepository)
+        )
         val userRepository = UserRepository(database.userDao(), connectivityObserver)
         val userViewModel = UserViewModel(
             GetAllUsersUseCase(userRepository),
@@ -48,15 +57,6 @@ class MainActivity : ComponentActivity() {
             DeleteUserUseCase(userRepository),
             sessionManager,
             connectivityObserver
-        )
-
-        val roleRepository = RoleRepository(database.roleDao(), connectivityObserver)
-        val roleViewModel = RoleViewModel(
-            GetAllRolesUseCase(roleRepository),
-            GetRoleByIdUseCase(roleRepository),
-            CreateRoleUseCase(roleRepository),
-            UpdateRoleUseCase(roleRepository),
-            DeleteRoleUseCase(roleRepository)
         )
 
         val locationRepository = LocationRepository(database.locationDao(), connectivityObserver)
@@ -87,7 +87,12 @@ class MainActivity : ComponentActivity() {
             val coroutineScope = rememberCoroutineScope()
 
             LaunchedEffect(Unit) {
-                userViewModel.checkIfUserIsLoggedIn()
+                try {
+                    roleViewModel.loadRoles()
+                    userViewModel.checkIfUserIsLoggedIn()
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error al cargar roles iniciales: ${e.message}", e)
+                }
             }
 
             ClockInGoThemeWrapper(

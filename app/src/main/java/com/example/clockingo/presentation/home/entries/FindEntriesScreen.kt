@@ -60,7 +60,10 @@ fun FindEntriesScreen(
     var imageToShow by rememberSaveable { mutableStateOf("") }
 
     if (showPictureScreen) {
-        PictureScreen(selfieBase64 = imageToShow, onBack = { showPictureScreen = false })
+        PictureScreen(
+            selfieBase64 = imageToShow,
+            onBack = { showPictureScreen = false }
+        )
         return
     }
 

@@ -22,13 +22,22 @@ class EntrySyncWorker(
         unsynced.forEach { entity ->
             try {
                 val entry = entity.toDomain()
+                val cleanedSelfie = try {
+                    val innerBase64 = String(
+                        android.util.Base64.decode(entry.selfie ?: "", android.util.Base64.NO_WRAP),
+                        Charsets.UTF_8
+                    )
+                    innerBase64
+                } catch (e: Exception) {
+                    entry.selfie ?: ""
+                }
                 val dto = InsertDto(
                     table = "Entries",
                     values = mapOf(
                         "UserId" to JsonPrimitive(entry.userId),
                         "LocationId" to JsonPrimitive(entry.locationId),
                         "EntryTime" to JsonPrimitive(entry.entryTime),
-                        "Selfie" to JsonPrimitive(entry.selfie ?: ""),
+                        "Selfie" to JsonPrimitive(cleanedSelfie),
                         "UpdatedAt" to JsonPrimitive(entry.updatedAt ?: ""),
                         "IsSynced" to JsonPrimitive(true),
                         "DeviceId" to JsonPrimitive(entry.deviceId)

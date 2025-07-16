@@ -31,11 +31,19 @@ class ExitRepository(
                 val dto = SelectDto(table = "Exits")
                 val apiResponse = api.select(dto)
                 if (apiResponse.isSuccessful) {
-                    val exitsDto = apiResponse.body() ?: emptyList()
-                    val exits = exitsDto.map { it.DtoToDomain() }
-                    dao.deleteAllExits()
-                    exits.forEach { dao.insert(it.copy(isSynced = true).toEntity()) }
-                    Response.success(exits)
+                    val remoteExits = apiResponse.body()?.map { it.DtoToDomain() } ?: emptyList()
+                    val localExits = dao.getAllExits().map { it.toDomain() }
+                    val localExitMap = localExits.associateBy { it.id }
+                    for (remoteExit in remoteExits) {
+                        val existingLocal = localExitMap[remoteExit.id]
+                        if (existingLocal != null) {
+                            dao.insert(remoteExit.copy(isSynced = true).toEntity())
+                        } else {
+                            dao.insert(remoteExit.copy(isSynced = true).toEntity())
+                        }
+                    }
+                    Response.success(dao.getAllExits().map { it.toDomain() })
+
                 } else {
                     Log.w("ExitRepository", "API failed for getAllExits (${apiResponse.code()}), loading from local DB.")
                     Response.success(dao.getAllExits().map { it.toDomain() })

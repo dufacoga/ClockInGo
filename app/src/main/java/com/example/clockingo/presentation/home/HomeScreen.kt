@@ -472,7 +472,8 @@ fun HomeScreen(
                                                 msg,
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                        }
+                                        },
+                                        isOnline = isOnline
                                     )
                                 }
                             }
