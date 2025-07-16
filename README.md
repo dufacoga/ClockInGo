@@ -104,7 +104,7 @@ This project is open source under the [MIT License](LICENSE).
 
 ---
 
-## 👤 Author
+## 👤 Author 
 
 **Douglas Cortes**  
 💼 [LinkedIn](https://www.linkedin.com/in/dufacoga)  
