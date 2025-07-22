@@ -7,6 +7,10 @@
   <a href="https://github.com/dufacoga/ClockInGo/commits/master"><img src="https://img.shields.io/github/last-commit/dufacoga/ClockInGo"/></a>
   <a href="https://github.com/dufacoga/ClockInGo/blob/master/CODE_OF_CONDUCT.md"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/></a>
   <a href="https://github.com/dufacoga/ClockInGo/blob/master/LICENSE"><img src="https://img.shields.io/github/license/dufacoga/ClockInGo"/></a>
+  <br />
+  <a href="https://www.paypal.com/donate/?business=R2J9NH55HXKGJ&no_recurring=0&currency_code=USD"><img src="https://img.shields.io/badge/PayPal-Donate-blue.svg"/></a>
+  <a href="https://www.patreon.com/dufacoga"><img src="https://img.shields.io/badge/Patreon-Become%20a%20Patron-black.svg"/></a>
+  <a href="https://ko-fi.com/dufacoga"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FFFFFF.svg?logo=ko-fi&logoColor=white"/></a>
 </p>
 
 A modern time attendance application for Android built with **Kotlin** and **Jetpack Compose**. ClockInGo allows users to scan QR coded locations, take selfies as proof of presence and manage users, roles and locations. The app works offline thanks to a local Room database and synchronizes data with the [FlexiQueryAPI](https://github.com/dufacoga/FlexiQueryAPI) when a connection is available.
