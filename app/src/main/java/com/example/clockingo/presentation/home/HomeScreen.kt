@@ -420,6 +420,7 @@ fun HomeScreen(
                             userViewModel = userViewModel,
                             roleViewModel = roleViewModel,
                             forUpdate = false,
+                            forMore = true,
                             onUserSelected = { }
                         )
                     11 -> CreateUsersScreen(userViewModel = userViewModel, roleViewModel = roleViewModel)
@@ -428,6 +429,7 @@ fun HomeScreen(
                             userViewModel = userViewModel,
                             roleViewModel = roleViewModel,
                             forUpdate = true,
+                            forMore = false,
                             onUserSelected = { user -> selectedUser = user }
                         )
                     } else {
@@ -451,6 +453,7 @@ fun HomeScreen(
                         FindLocationsScreen(
                             locationViewModel = locationViewModel,
                             forUpdate = false,
+                            forMore = true,
                             onLocationSelected = { location ->
                                 locationViewModel.currentLocation(location)
                             },
@@ -464,6 +467,7 @@ fun HomeScreen(
                         FindLocationsScreen(
                             locationViewModel = locationViewModel,
                             forUpdate = true,
+                            forMore = false,
                             onLocationSelected = { location -> locationViewModel.currentLocation(location) },
                             onShowQR = {  }
                         )
@@ -531,6 +535,7 @@ fun HomeScreen(
                         userViewModel = userViewModel,
                         locationViewModel = locationViewModel,
                         forUpdate = false,
+                        forMore = true,
                         currentUser = currentUser!!
                     )
                     40 -> Text(stringResource(R.string.home_exit_add_coming_soon))

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.Dp
 import com.example.clockingo.domain.model.Location
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.materialdatatable.MaterialDataTableC
-import com.example.materialdatatable.dataLoaderFromListWithDelay
+import com.example.materialdatatable.dataLoaderFromList
 import androidx.compose.ui.res.stringResource
 import com.example.clockingo.R
 
@@ -25,6 +25,7 @@ import com.example.clockingo.R
 fun FindLocationsScreen(
     locationViewModel: LocationViewModel,
     forUpdate: Boolean,
+    forMore: Boolean,
     onLocationSelected: (Location) -> Unit,
     onShowQR: (String) -> Unit
 ) {
@@ -119,34 +120,54 @@ fun FindLocationsScreen(
                         )
                     }
                     val paginatedLocationsCount = filteredLocations.size
-                    val (locationRowMapper, rowDataToLocationMapper) = getLocationRowMappers(LocalContext.current, isLandscape)
-                    locationDataLoader = dataLoaderFromListWithDelay(
-                        sourceProvider = { filteredLocations },
-                        rowMapper = locationRowMapper
+                    val locationDataLoader = dataLoaderFromList(
+                        sourceProvider = { filteredLocations }
                     )
+
+                    val placeholder = LocalContext.current.getString(R.string.find_location_value_placeholder)
+                    val yesLabel = LocalContext.current.getString(R.string.find_location_value_yes)
+                    val noLabel = LocalContext.current.getString(R.string.find_location_value_no)
+
+                    val locationToRow: (Location) -> List<String> = if (isLandscape) {
+                        { location ->
+                            listOf(
+                                location.id.toString(),
+                                location.address ?: placeholder,
+                                location.city ?: placeholder,
+                                if (location.isCompanyOffice) yesLabel else noLabel
+                            )
+                        }
+                    } else {
+                        { location ->
+                            listOf(
+                                location.id.toString(),
+                                location.address ?: placeholder,
+                                location.city ?: placeholder
+                            )
+                        }
+                    }
 
                     MaterialDataTableC(
                         headers = headers,
                         dataLoader = locationDataLoader,
-                        onEdit = { rowIndex, rowData ->
-                            onLocationSelected(rowDataToLocationMapper(rowData))
-                            println("Edit location at row: $rowIndex")
+                        rowMapper = locationToRow,
+                        onEdit = { location ->
+                            onLocationSelected(location)
+                            println("Edit location at row: ${location.id}")
                         },
-                        onDelete = { rowIndex, rowData -> println("Delete location at row: $rowIndex") },
-                        onMoreVert = { rowIndex, rowData ->
-                            val selectedRow = rowDataToLocationMapper(rowData)
-                            val location = allLocations.find { it.id == selectedRow.id }
-                            location?.let {
-                                qrCodeToShow = it.code
-                                showQRScreen = true
-                            }
+                        onDelete = { location -> println("Delete location at row: ${location.id}") },
+                        onMore = { location ->
+                            qrCodeToShow = location.code
+                            showQRScreen = true
                         },
                         columnSizeAdaptive = true,
                         columnWidth = 150.dp,
+                        moreOption = forMore,
                         editOption = forUpdate,
                         deleteOption = false,
                         horizontalDividers = true,
                         verticalDividers = true,
+                        paginationRowFixed = true,
                         childState = childState,
                         width = width,
                         height = height,
@@ -156,58 +177,4 @@ fun FindLocationsScreen(
             }
         }
     }
-}
-
-fun getLocationRowMappers(
-    context: Context,
-    isLandscape: Boolean
-): Pair<(Location) -> List<String>, (List<String>) -> Location> {
-    val placeholder = context.getString(R.string.find_location_value_placeholder)
-    val yesLabel = context.getString(R.string.find_location_value_yes)
-    val noLabel = context.getString(R.string.find_location_value_no)
-
-    val locationToRow: (Location) -> List<String> = if (isLandscape) {
-        { location ->
-            listOf(
-                location.id.toString(),
-                location.address ?: placeholder,
-                location.city ?: placeholder,
-                if (location.isCompanyOffice) yesLabel else noLabel
-            )
-        }
-    } else {
-        { location ->
-            listOf(
-                location.id.toString(),
-                location.address ?: placeholder,
-                location.city ?: placeholder
-            )
-        }
-    }
-
-    val rowToLocation: (List<String>) -> Location = if (isLandscape) {
-        { row ->
-            Location(
-                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
-                code = row.getOrNull(1) ?: "",
-                address = row.getOrNull(2).takeIf { it != placeholder },
-                city = row.getOrNull(3).takeIf { it != placeholder },
-                createdBy = 0,
-                isCompanyOffice = row.getOrNull(4) == yesLabel
-            )
-        }
-    } else {
-        { row ->
-            Location(
-                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
-                code = row.getOrNull(1) ?: "",
-                address = row.getOrNull(2).takeIf { it != placeholder },
-                city = null,
-                createdBy = 0,
-                isCompanyOffice = false
-            )
-        }
-    }
-
-    return Pair(locationToRow, rowToLocation)
 }

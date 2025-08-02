@@ -27,30 +27,15 @@ fun UpdateLocationsScreen(
     onFinish: () -> Unit
 ) {
     val context = LocalContext.current
-    val loadedLocation by locationViewModel.currentLocation.collectAsState()
 
     LaunchedEffect(location.id) {
         locationViewModel.getLocationById(location.id)
     }
 
-    if (
-        loadedLocation == null ||
-        loadedLocation!!.code.isBlank() ||
-        loadedLocation!!.createdBy == 0
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
-    val code by remember { mutableStateOf(loadedLocation!!.code) }
-    var address by remember { mutableStateOf(loadedLocation!!.address ?: "") }
-    var city by remember { mutableStateOf(loadedLocation!!.city ?: "") }
-    var isCompanyOffice by remember { mutableStateOf(loadedLocation!!.isCompanyOffice) }
+    val code by remember { mutableStateOf(location.code) }
+    var address by remember { mutableStateOf(location.address ?: "") }
+    var city by remember { mutableStateOf(location.city ?: "") }
+    var isCompanyOffice by remember { mutableStateOf(location.isCompanyOffice) }
     val qrBitmap = QRCodeGenerator.generateQRCode(code)
 
     BackHandler {

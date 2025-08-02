@@ -35,7 +35,6 @@ class UserViewModel(
     val currentUser: StateFlow<User?> get() = _currentUser
 
     private val _userToEdit = MutableStateFlow<User?>(null)
-    val userToEdit: StateFlow<User?> get() = _userToEdit
 
     val isOnline: StateFlow<Boolean> get() = connectivityObserver.isConnected
 

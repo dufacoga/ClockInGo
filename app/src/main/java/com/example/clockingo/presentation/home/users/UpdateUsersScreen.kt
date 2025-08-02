@@ -30,7 +30,6 @@ fun UpdateUsersScreen(
 ) {
     val context = LocalContext.current
     val roleList by roleViewModel.roleList.collectAsState()
-    val loadedUser by userViewModel.userToEdit.collectAsState()
 
     LaunchedEffect(Unit) {
         roleViewModel.loadRoles()
@@ -40,28 +39,11 @@ fun UpdateUsersScreen(
         userViewModel.getUserById(user.id)
     }
 
-    if (
-        loadedUser == null ||
-        loadedUser!!.name.isBlank() ||
-        loadedUser!!.phone.isNullOrBlank() ||
-        loadedUser!!.username.isBlank() ||
-        loadedUser!!.authToken.isBlank() ||
-        loadedUser!!.roleId == 0
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-
-    var name by remember { mutableStateOf(loadedUser!!.name) }
-    var phone by remember { mutableStateOf(loadedUser!!.phone ?: "") }
-    var username by remember { mutableStateOf(loadedUser!!.username) }
-    var password by remember { mutableStateOf(loadedUser!!.authToken) }
-    var selectedRoleId by remember { mutableIntStateOf(loadedUser!!.roleId) }
+    var name by remember { mutableStateOf(user.name) }
+    var phone by remember { mutableStateOf(user.phone ?: "") }
+    var username by remember { mutableStateOf(user.username) }
+    var password by remember { mutableStateOf(user.authToken) }
+    var selectedRoleId by remember { mutableIntStateOf(user.roleId) }
     var expanded by remember { mutableStateOf(false) }
 
     BackHandler {

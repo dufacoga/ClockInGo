@@ -21,7 +21,7 @@ import com.example.clockingo.presentation.viewmodel.EntryViewModel
 import com.example.clockingo.presentation.viewmodel.LocationViewModel
 import com.example.clockingo.presentation.viewmodel.UserViewModel
 import com.example.materialdatatable.MaterialDataTableC
-import com.example.materialdatatable.dataLoaderFromListWithDelay
+import com.example.materialdatatable.dataLoaderFromList
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.ui.res.stringResource
@@ -33,6 +33,7 @@ fun FindEntriesScreen(
     userViewModel: UserViewModel,
     locationViewModel: LocationViewModel,
     forUpdate: Boolean,
+    forMore: Boolean,
     currentUser: User
 ) {
     val context = LocalContext.current
@@ -146,19 +147,78 @@ fun FindEntriesScreen(
                     }
                     val paginatedEntriesCount = filteredEntries.size
 
-                    val (entryRowMapper, rowDataToEntryMapper) = getEntryRowMappers(context ,isLandscape, allUsers, allLocations)
-                    entryDataLoader = dataLoaderFromListWithDelay(
-                        sourceProvider = { filteredEntries },
-                        rowMapper = entryRowMapper
+                    val entryDataLoader = dataLoaderFromList(
+                        sourceProvider = { filteredEntries }
                     )
+                    val dbFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                    val displayFormatter = SimpleDateFormat("MMM dd, yyyy HH:mm a", Locale.getDefault())
+
+                    val entryToRow: (Entry) -> List<String> = if (isLandscape) {
+                        { entry ->
+                            val userName = allUsers.find { it.id == entry.userId }?.name ?: context.getString(R.string.find_entries_unknown_user)
+                            val locationDetail = allLocations.find { it.id == entry.locationId }
+                            val locationAddress = if (locationDetail != null) {
+                                "${locationDetail.address} - ${locationDetail.city}"
+                            } else {
+                                "Unknown Location"
+                            }
+                            val formattedEntryTime = try {
+                                val date = dbFormatter.parse(entry.entryTime)
+                                if (date != null) {
+                                    displayFormatter.format(date)
+                                } else {
+                                    entry.entryTime
+                                }
+                            } catch (e: Exception) {
+                                println("Error parsing entryTime: ${entry.entryTime} - ${e.message}")
+                                entry.entryTime
+                            }
+
+                            listOf(
+                                entry.id.toString(),
+                                userName,
+                                locationAddress,
+                                formattedEntryTime
+                            )
+                        }
+                    } else {
+                        { entry ->
+                            val userName = allUsers.find { it.id == entry.userId }?.name ?: context.getString(R.string.find_entries_unknown_user)
+                            val locationDetail = allLocations.find { it.id == entry.locationId }
+                            val locationAddress = if (locationDetail != null) {
+                                "${locationDetail.address} - ${locationDetail.city}"
+                            } else {
+                                "Unknown Location"
+                            }
+                            val formattedEntryTime = try {
+                                val date = dbFormatter.parse(entry.entryTime)
+                                if (date != null) {
+                                    displayFormatter.format(date)
+                                } else {
+                                    entry.entryTime
+                                }
+                            } catch (e: Exception) {
+                                println("Error parsing entryTime: ${entry.entryTime} - ${e.message}")
+                                entry.entryTime
+                            }
+
+                            listOf(
+                                entry.id.toString(),
+                                userName,
+                                locationAddress,
+                                formattedEntryTime
+                            )
+                        }
+                    }
 
                     MaterialDataTableC(
                         headers = headers,
                         dataLoader = entryDataLoader,
-                        onEdit = { rowIndex, rowData  -> println("Edit entry at row: $rowIndex") },
-                        onDelete = { rowIndex, rowData -> println("Delete entry at row: $rowIndex") },
-                        onMoreVert = { rowIndex, rowData ->
-                            val selectedRow = rowDataToEntryMapper(rowData)
+                        rowMapper = entryToRow,
+                        onEdit = { entry  -> println("Edit entry at row: ${entry.id}") },
+                        onDelete = { entry -> println("Delete entry at row: ${entry.id}") },
+                        onMore = { entry ->
+                            val selectedRow = entry
                             val entry = allEntries.find { it.id == selectedRow.id }
                             entry?.let {
                                 imageToShow = it.selfie ?: context.getString(R.string.find_entries_no_selfie)
@@ -167,10 +227,12 @@ fun FindEntriesScreen(
                         },
                         columnSizeAdaptive = true,
                         columnWidth = 150.dp,
+                        moreOption = forMore,
                         editOption = forUpdate,
                         deleteOption = false,
                         horizontalDividers = true,
                         verticalDividers = true,
+                        paginationRowFixed = true,
                         childState = childState,
                         width = width,
                         height = height,

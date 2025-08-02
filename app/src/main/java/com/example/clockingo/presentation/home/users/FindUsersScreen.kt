@@ -18,7 +18,7 @@ import com.example.clockingo.domain.model.Role
 import com.example.clockingo.domain.model.User
 import com.example.clockingo.presentation.viewmodel.RoleViewModel
 import com.example.materialdatatable.MaterialDataTableC
-import com.example.materialdatatable.dataLoaderFromListWithDelay
+import com.example.materialdatatable.dataLoaderFromList
 import androidx.compose.ui.res.stringResource
 import com.example.clockingo.R
 
@@ -27,6 +27,7 @@ fun FindUsersScreen(
     userViewModel: UserViewModel,
     roleViewModel: RoleViewModel,
     forUpdate: Boolean,
+    forMore: Boolean,
     onUserSelected: (User) -> Unit
 ) {
     val allUsers by userViewModel.userList.collectAsState()
@@ -43,7 +44,7 @@ fun FindUsersScreen(
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
     var isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    var userDataLoader: suspend (Int, Int) -> List<List<String>> = { _, _ -> emptyList() }
+    var userDataLoader: suspend (Int, Int) -> List<User>? = { _, _ -> emptyList() }
 
     val width: Dp = screenWidth * 0.95f
     val height: Dp = if (isLandscape) {
@@ -111,24 +112,52 @@ fun FindUsersScreen(
                                 (searchName.isBlank() || it.name.contains(searchName.trim(), ignoreCase = true))
                     }
                     val paginatedUsersCount = filteredUsers.size
-                    val (userRowMapper, rowDataToUserMapper) = getUserRowMappers(LocalContext.current, isLandscape, roles)
-                    userDataLoader = dataLoaderFromListWithDelay(
-                        sourceProvider = { filteredUsers },
-                        rowMapper = userRowMapper
+
+                    userDataLoader = dataLoaderFromList(
+                        sourceProvider = { filteredUsers }
                     )
+
+                    val placeholderPhone = LocalContext.current.getString(R.string.find_user_placeholder_phone)
+                    val placeholderRole = LocalContext.current.getString(R.string.find_user_placeholder_role)
+
+                    val userToRow: (User) -> List<String> = if (isLandscape) {
+                        { user ->
+                            listOf(
+                                user.id.toString(),
+                                user.name,
+                                user.phone ?: placeholderPhone,
+                                user.username,
+                                roles.find { it.id == user.roleId }?.name ?: placeholderRole
+                            )
+                        }
+                    } else {
+                        { user ->
+                            listOf(
+                                user.id.toString(),
+                                user.name,
+                                user.username
+                            )
+                        }
+                    }
 
                     MaterialDataTableC(
                         headers = headers,
                         dataLoader = userDataLoader,
-                        onEdit = { rowIndex, rowData -> onUserSelected(rowDataToUserMapper(rowData)); println("Edit user at row: $rowIndex") },
-                        onDelete = { rowIndex, rowData -> println("Delete user at row: $rowIndex") },
-                        onMoreVert = { rowIndex, rowData -> println("MoreVert user at row: $rowIndex") },
+                        rowMapper = userToRow,
+                        onEdit = {
+                            user -> onUserSelected(user)
+                            println("Edit user at row: ${user.name}")
+                        },
+                        onDelete = { user -> println("Delete user at row: ${user.name}") },
+                        onMore = { user -> println("More user at row: ${user.name}") },
                         columnSizeAdaptive = true,
                         columnWidth = 150.dp,
+                        moreOption = forMore,
                         editOption = forUpdate,
                         deleteOption = false,
                         horizontalDividers = true,
                         verticalDividers = true,
+                        paginationRowFixed = true,
                         childState = childState,
                         width = width,
                         height = height,
@@ -138,59 +167,4 @@ fun FindUsersScreen(
             }
         }
     }
-}
-
-fun getUserRowMappers(
-    context: Context,
-    isLandscape: Boolean,
-    roles: List<Role>
-): Pair<(User) -> List<String>, (List<String>) -> User> {
-    val placeholderPhone = context.getString(R.string.find_user_placeholder_phone)
-    val placeholderRole = context.getString(R.string.find_user_placeholder_role)
-
-    val userToRow: (User) -> List<String> = if (isLandscape) {
-        { user ->
-            listOf(
-                user.id.toString(),
-                user.name,
-                user.phone ?: placeholderPhone,
-                user.username,
-                roles.find { it.id == user.roleId }?.name ?: placeholderRole
-            )
-        }
-    } else {
-        { user ->
-            listOf(
-                user.id.toString(),
-                user.name,
-                user.username
-            )
-        }
-    }
-
-    val rowToUser: (List<String>) -> User = if (isLandscape) {
-        { row ->
-            User(
-                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
-                name = row.getOrNull(1) ?: "",
-                phone = row.getOrNull(2).takeIf { it != placeholderPhone },
-                username = row.getOrNull(3) ?: "",
-                authToken = "",
-                roleId = roles.find { it.name == row.getOrNull(4) }?.id ?: 0
-            )
-        }
-    } else {
-        { row ->
-            User(
-                id = row.getOrNull(0)?.toIntOrNull() ?: 0,
-                name = row.getOrNull(1) ?: "",
-                phone = null,
-                username = row.getOrNull(2) ?: "",
-                authToken = "",
-                roleId = 0
-            )
-        }
-    }
-
-    return Pair(userToRow, rowToUser)
 }
